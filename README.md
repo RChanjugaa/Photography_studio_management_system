@@ -1,0 +1,1 @@
+# Photography_studio_management_system
