@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 
+
 function Login() {
   const navigate = useNavigate();
 
@@ -10,49 +11,50 @@ function Login() {
   const handleSubmit = (e) => {
     e.preventDefault();
 
-    // Temporary authentication logic
     if (email && password) {
       localStorage.setItem("clientAuth", "true");
       navigate("/client/dashboard");
     } else {
-      alert("Please enter email and password");
+      alert("Please fill all fields");
     }
   };
 
   return (
-    <div style={{ padding: "50px" }}>
-      <h2>Client Login</h2>
+    <div className="auth-wrapper">
+      <div className="auth-card">
+        <h2 className="auth-title">Client Login</h2>
 
-      <form onSubmit={handleSubmit}>
-        <div>
-          <label>Email</label><br />
-          <input
-            type="email"
-            placeholder="Enter email"
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
-          />
-        </div>
+        <form onSubmit={handleSubmit}>
+          <div className="form-group">
+            <label>Email</label>
+            <input
+              type="email"
+              placeholder="Enter email"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+            />
+          </div>
 
-        <div style={{ marginTop: "10px" }}>
-          <label>Password</label><br />
-          <input
-            type="password"
-            placeholder="Enter password"
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-          />
-        </div>
+          <div className="form-group">
+            <label>Password</label>
+            <input
+              type="password"
+              placeholder="Enter password"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+            />
+          </div>
 
-        <button type="submit" style={{ marginTop: "15px" }}>
-          Login
-        </button>
-      </form>
+          <button type="submit" className="auth-button">
+            Login
+          </button>
+        </form>
 
-      <p style={{ marginTop: "15px" }}>
-        Don’t have an account?{" "}
-        <Link to="/client/register">Register</Link>
-      </p>
+        <p className="auth-footer">
+          Don’t have an account?{" "}
+          <Link to="/client/register">Register</Link>
+        </p>
+      </div>
     </div>
   );
 }
