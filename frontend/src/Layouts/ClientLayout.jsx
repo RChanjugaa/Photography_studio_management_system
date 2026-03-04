@@ -36,6 +36,8 @@ function ClientLayout() {
             Profile
            </Link> 
            <Link to="/client/booking-request">Booking Request</Link>
+           <Link to="/client/booking-history">Booking History</Link>
+           <Link to="/client/profile">Profile</Link>
           <button
             onClick={handleLogout}
             style={{

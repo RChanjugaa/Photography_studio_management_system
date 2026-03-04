@@ -5,6 +5,7 @@ import Register from "./pages/client/Register";
 import Dashboard from "./pages/client/Dashboard";
 import Profile from "./pages/client/Profile";
 import BookingRequest from "./pages/client/BookingRequest";
+import BookingHistory from "./pages/client/BookingHistory";
 import ClientLayout from "./layouts/ClientLayout";
 
 function App() {

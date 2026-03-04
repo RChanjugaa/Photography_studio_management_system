@@ -1,0 +1,41 @@
+:root{
+  --primary-blue:#4C8BF5;
+  --white:#FFF;
+  --light-grey:#F3F4F6;
+  --grey:#D1D5DB;
+  --dark-grey:#1F2937;
+  --pastel-blue:#C7E0FF;
+  --pastel-lavender:#E3D9FF;
+  --pastel-peach:#FFE7D6;
+  --success:#27AE60;
+  --error:#E63946;
+  --radius:10px;
+  --shadow-soft:0 2px 6px rgba(0,0,0,.05);
+}
+
+body{
+  background: var(--light-grey);
+  font-family: 'Inter', sans-serif;
+}
+
+.card-custom{
+  border-radius: var(--radius);
+  box-shadow: var(--shadow-soft);
+  border: 1px solid var(--grey);
+}
+
+.btn-primary-custom{
+  background: var(--primary-blue);
+  border: none;
+}
+
+.btn-primary-custom:hover{
+  background:#3a74d6;
+}
+
+.status-chip{
+  padding:4px 12px;
+  border-radius:20px;
+  font-size:12px;
+  color:white;
+}

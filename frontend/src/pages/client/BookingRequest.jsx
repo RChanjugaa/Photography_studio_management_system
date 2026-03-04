@@ -1,105 +1,95 @@
 import { useState } from "react";
+import { Form, Button, Card, Container } from "react-bootstrap";
 
 function BookingRequest() {
   const [formData, setFormData] = useState({
-    eventType: "",
-    eventDate: "",
-    location: "",
-    message: ""
+    serviceType: "",
+    preferredDate: "",
+    preferredTimeWindow: "",
+    notes: ""
   });
 
   const handleChange = (e) => {
-    setFormData({
-      ...formData,
-      [e.target.name]: e.target.value
-    });
+    setFormData({ ...formData, [e.target.name]: e.target.value });
   };
 
   const handleSubmit = (e) => {
     e.preventDefault();
 
-    // For now just store locally
-    const existingRequests =
+    const existing =
       JSON.parse(localStorage.getItem("bookingRequests")) || [];
+
+    const newRequest = {
+      ...formData,
+      status: "RequestPending",
+      createdAt: new Date().toISOString()
+    };
 
     localStorage.setItem(
       "bookingRequests",
-      JSON.stringify([...existingRequests, formData])
+      JSON.stringify([...existing, newRequest])
     );
 
-    alert("Booking request submitted successfully 🎉");
-
-    setFormData({
-      eventType: "",
-      eventDate: "",
-      location: "",
-      message: ""
-    });
+    alert("Request submitted successfully 🎉");
   };
 
   return (
-    <div style={{ padding: "40px" }}>
-      <h1>New Booking Request</h1>
+    <Container className="py-5" style={{ maxWidth: "800px" }}>
+      <Card className="card-custom p-4">
+        <h2 className="mb-4">Request a Booking</h2>
 
-      <form
-        onSubmit={handleSubmit}
-        style={{
-          maxWidth: "500px",
-          marginTop: "20px",
-          display: "flex",
-          flexDirection: "column",
-          gap: "15px"
-        }}
-      >
-        <input
-          type="text"
-          name="eventType"
-          placeholder="Event Type (Wedding, Birthday, etc.)"
-          value={formData.eventType}
-          onChange={handleChange}
-          required
-        />
+        <Form onSubmit={handleSubmit}>
+          <Form.Group className="mb-3">
+            <Form.Label>Service Type</Form.Label>
+            <Form.Select
+              name="serviceType"
+              onChange={handleChange}
+              required
+            >
+              <option value="">Select Service</option>
+              <option>Wedding</option>
+              <option>Event</option>
+              <option>Studio</option>
+              <option>Outdoor</option>
+            </Form.Select>
+          </Form.Group>
 
-        <input
-          type="date"
-          name="eventDate"
-          value={formData.eventDate}
-          onChange={handleChange}
-          required
-        />
+          <Form.Group className="mb-3">
+            <Form.Label>Preferred Date</Form.Label>
+            <Form.Control
+              type="date"
+              name="preferredDate"
+              onChange={handleChange}
+              required
+            />
+          </Form.Group>
 
-        <input
-          type="text"
-          name="location"
-          placeholder="Event Location"
-          value={formData.location}
-          onChange={handleChange}
-          required
-        />
+          <Form.Group className="mb-3">
+            <Form.Label>Preferred Time Window</Form.Label>
+            <Form.Control
+              type="text"
+              name="preferredTimeWindow"
+              placeholder="Morning / Evening"
+              onChange={handleChange}
+            />
+          </Form.Group>
 
-        <textarea
-          name="message"
-          placeholder="Additional Details"
-          value={formData.message}
-          onChange={handleChange}
-          rows="4"
-        />
+          <Form.Group className="mb-3">
+            <Form.Label>Notes</Form.Label>
+            <Form.Control
+              as="textarea"
+              rows={3}
+              name="notes"
+              onChange={handleChange}
+            />
+          </Form.Group>
 
-        <button
-          type="submit"
-          style={{
-            padding: "10px",
-            background: "#2c3e50",
-            color: "white",
-            border: "none",
-            borderRadius: "6px",
-            cursor: "pointer"
-          }}
-        >
-          Submit Request
-        </button>
-      </form>
-    </div>
+          <Button type="submit" className="btn-primary-custom w-100">
+            Submit Request
+          </Button>
+        </Form>
+      </Card>
+    </Container>
   );
 }
 
