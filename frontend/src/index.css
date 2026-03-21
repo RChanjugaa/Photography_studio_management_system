@@ -25,30 +25,17 @@
   color: #1f2d3d;
 }
 
-/* Form group */
-.form-group {
-  margin-bottom: 18px;
+body {
+  margin: 0;
+  display: flex;
+  place-items: center;
+  min-width: 320px;
+  min-height: 100vh;
 }
 
-.form-group label {
-  display: block;
-  margin-bottom: 6px;
-  font-size: 14px;
-  color: #444;
-}
-
-.form-group input {
-  width: 100%;
-  padding: 10px;
-  border-radius: 8px;
-  border: 1px solid #dcdcdc;
-  font-size: 14px;
-  transition: 0.3s;
-}
-
-.form-group input:focus {
-  outline: none;
-  border-color: #4a90e2;
+h1 {
+  font-size: 3.2em;
+  line-height: 1.1;
 }
 
 /* Button */
@@ -67,16 +54,20 @@
 .auth-button:hover {
   background: #357abd;
 }
-
-/* Footer */
-.auth-footer {
-  margin-top: 18px;
-  text-align: center;
-  font-size: 14px;
+button:focus,
+button:focus-visible {
+  outline: 4px auto -webkit-focus-ring-color;
 }
 
-.auth-footer a {
-  color: #4a90e2;
-  text-decoration: none;
-  font-weight: 500;
+@media (prefers-color-scheme: light) {
+  :root {
+    color: #213547;
+    background-color: #ffffff;
+  }
+  a:hover {
+    color: #747bff;
+  }
+  button {
+    background-color: #f9f9f9;
+  }
 }
