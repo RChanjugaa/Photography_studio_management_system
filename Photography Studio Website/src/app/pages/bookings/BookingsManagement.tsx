@@ -154,7 +154,7 @@ export default function BookingsManagement() {
                   <SelectTrigger className="w-full sm:w-40 bg-gray-900 border-gray-800 text-white">
                     <SelectValue placeholder="All Status" />
                   </SelectTrigger>
-                  <SelectContent className="bg-gray-900 border-gray-800">
+                  <SelectContent className="bg-gray-700 focus:bg-gray-700 focus:text-white border-gray-800">
                     <SelectItem value="all">All Status</SelectItem>
                     <SelectItem value="Pending">Pending</SelectItem>
                     <SelectItem value="Confirmed">Confirmed</SelectItem>
@@ -167,7 +167,7 @@ export default function BookingsManagement() {
                   <SelectTrigger className="w-full sm:w-40 bg-gray-900 border-gray-800 text-white">
                     <SelectValue placeholder="All Types" />
                   </SelectTrigger>
-                  <SelectContent className="bg-gray-900 border-gray-800">
+                  <SelectContent className="bg-gray-700 focus:bg-gray-700 focus:text-white border-gray-800">
                     <SelectItem value="all">All Types</SelectItem>
                     <SelectItem value="Wedding">Wedding</SelectItem>
                     <SelectItem value="Event">Event</SelectItem>

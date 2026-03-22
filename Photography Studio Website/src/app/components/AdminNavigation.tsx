@@ -21,6 +21,7 @@ export default function AdminNavigation() {
   const navItems = [
     { path: '/admin/dashboard', label: 'Dashboard', icon: LayoutDashboard },
     { path: '/admin/employees', label: 'Employees', icon: Users },
+    { path: '/admin/bookings', label: 'Bookings', icon: Calendar },
     { path: '/admin/events', label: 'Events', icon: Calendar },
     { path: '/admin/payments', label: 'Payments', icon: DollarSign },
     { path: '/gallery', label: 'Galleries', icon: Image },
