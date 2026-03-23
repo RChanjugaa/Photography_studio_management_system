@@ -154,12 +154,12 @@ export default function BookingsManagement() {
                   <SelectTrigger className="w-full sm:w-40 bg-gray-900 border-gray-800 text-white">
                     <SelectValue placeholder="All Status" />
                   </SelectTrigger>
-                  <SelectContent className="bg-gray-700 focus:bg-gray-700 focus:text-white border-gray-800">
-                    <SelectItem value="all">All Status</SelectItem>
-                    <SelectItem value="Pending">Pending</SelectItem>
-                    <SelectItem value="Confirmed">Confirmed</SelectItem>
-                    <SelectItem value="Completed">Completed</SelectItem>
-                    <SelectItem value="Cancelled">Cancelled</SelectItem>
+                  <SelectContent className="bg-gray-900 border-gray-800">
+                    <SelectItem value="all" className="text-white hover:bg-gray-700 focus:bg-gray-700 focus:text-white">All Status</SelectItem>
+                    <SelectItem value="Pending" className="text-white hover:bg-gray-700 focus:bg-gray-700 focus:text-white">Pending</SelectItem>
+                    <SelectItem value="Confirmed" className="text-white hover:bg-gray-700 focus:bg-gray-700 focus:text-white">Confirmed</SelectItem>
+                    <SelectItem value="Completed" className="text-white hover:bg-gray-700 focus:bg-gray-700 focus:text-white">Completed</SelectItem>
+                    <SelectItem value="Cancelled" className="text-white hover:bg-gray-700 focus:bg-gray-700 focus:text-white">Cancelled</SelectItem>
                   </SelectContent>
                 </Select>
                 
@@ -167,12 +167,12 @@ export default function BookingsManagement() {
                   <SelectTrigger className="w-full sm:w-40 bg-gray-900 border-gray-800 text-white">
                     <SelectValue placeholder="All Types" />
                   </SelectTrigger>
-                  <SelectContent className="bg-gray-700 focus:bg-gray-700 focus:text-white border-gray-800">
-                    <SelectItem value="all">All Types</SelectItem>
-                    <SelectItem value="Wedding">Wedding</SelectItem>
-                    <SelectItem value="Event">Event</SelectItem>
-                    <SelectItem value="Studio">Studio</SelectItem>
-                    <SelectItem value="Outdoor">Outdoor</SelectItem>
+                  <SelectContent className="bg-gray-900 border-gray-800">
+                    <SelectItem value="all" className="text-white hover:bg-gray-700 focus:bg-gray-700 focus:text-white">All Types</SelectItem>
+                    <SelectItem value="Wedding" className="text-white hover:bg-gray-700 focus:bg-gray-700 focus:text-white">Wedding</SelectItem>
+                    <SelectItem value="Event" className="text-white hover:bg-gray-700 focus:bg-gray-700 focus:text-white">Event</SelectItem>
+                    <SelectItem value="Studio" className="text-white hover:bg-gray-700 focus:bg-gray-700 focus:text-white">Studio</SelectItem>
+                    <SelectItem value="Outdoor" className="text-white hover:bg-gray-700 focus:bg-gray-700 focus:text-white">Outdoor</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
@@ -455,7 +455,44 @@ function CalendarView({ currentMonth, setCurrentMonth, bookings, getStatusColor 
 }
 
 // Packages Component
-function PackagesView({ packages }: { packages: any[] }) {
+function PackagesView({ packages: initialPackages }: { packages: any[] }) {
+  const [packageList, setPackageList] = useState<any[]>(initialPackages);
+  const [viewPkg, setViewPkg] = useState<any | null>(null);
+  const [editPkg, setEditPkg] = useState<any | null>(null);
+  const [editForm, setEditForm] = useState<any>({});
+  const [showNewForm, setShowNewForm] = useState(false);
+  const [newForm, setNewForm] = useState({
+    title: '', type: 'Wedding', description: '', basePrice: '', durationHours: '', active: true
+  });
+
+  const handleEditOpen = (pkg: any) => {
+    setEditPkg(pkg);
+    setEditForm({ ...pkg });
+  };
+
+  const handleEditSave = () => {
+    setPackageList(prev => prev.map(p => p.id === editPkg.id ? { ...editForm } : p));
+    toast.success(`Package "${editForm.title}" updated!`);
+    setEditPkg(null);
+  };
+
+  const handleNewSave = () => {
+    if (!newForm.title || !newForm.basePrice || !newForm.durationHours) {
+      toast.error('Please fill all required fields!');
+      return;
+    }
+    const newPkg = {
+      id: Date.now(),
+      ...newForm,
+      basePrice: Number(newForm.basePrice),
+      durationHours: Number(newForm.durationHours),
+    };
+    setPackageList([...packageList, newPkg]);
+    toast.success(`Package "${newForm.title}" added!`);
+    setShowNewForm(false);
+    setNewForm({ title: '', type: 'Wedding', description: '', basePrice: '', durationHours: '', active: true });
+  };
+
   return (
     <div>
       <div className="flex justify-between items-center mb-6">
@@ -463,13 +500,13 @@ function PackagesView({ packages }: { packages: any[] }) {
           <h2 className="text-2xl font-serif text-white">Service Packages</h2>
           <p className="text-gray-400 mt-1">Manage your photography and event service packages</p>
         </div>
-        <Button className="bg-red-700 hover:bg-red-800 text-white">
+        <Button className="bg-red-700 hover:bg-red-800 text-white" onClick={() => setShowNewForm(true)}>
           <Plus className="size-4 mr-2" />
           New Package
         </Button>
       </div>
-      
-      {packages.length === 0 ? (
+
+      {packageList.length === 0 ? (
         <Card className="border-2 border-gray-800 bg-gradient-to-br from-[#2a0f0f] to-black p-16">
           <div className="text-center">
             <div className="flex justify-center mb-4">
@@ -479,35 +516,20 @@ function PackagesView({ packages }: { packages: any[] }) {
             </div>
             <h3 className="text-xl font-semibold text-white mb-2">No packages yet</h3>
             <p className="text-gray-400 mb-6">Create your first service package to use in bookings.</p>
-            <Button className="bg-red-700 hover:bg-red-800 text-white">
-              Create Package
-            </Button>
+            <Button className="bg-red-700 hover:bg-red-800 text-white" onClick={() => setShowNewForm(true)}>Create Package</Button>
           </div>
         </Card>
       ) : (
         <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {packages.map((pkg, idx) => (
-            <motion.div
-              key={pkg.id}
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.3, delay: idx * 0.1 }}
-            >
+          {packageList.map((pkg, idx) => (
+            <motion.div key={pkg.id} initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.3, delay: idx * 0.1 }}>
               <Card className="border-2 border-gray-800 hover:border-yellow-500/50 transition-colors bg-gradient-to-br from-[#2a0f0f] to-black p-6">
                 <div className="flex items-start justify-between mb-4">
-                  <Badge className="bg-yellow-500/20 text-yellow-400 border border-yellow-500/30">
-                    {pkg.type}
-                  </Badge>
-                  {pkg.active && (
-                    <Badge className="bg-green-500/20 text-green-400 border border-green-500/30">
-                      Active
-                    </Badge>
-                  )}
+                  <Badge className="bg-yellow-500/20 text-yellow-400 border border-yellow-500/30">{pkg.type}</Badge>
+                  {pkg.active && <Badge className="bg-green-500/20 text-green-400 border border-green-500/30">Active</Badge>}
                 </div>
-                
                 <h3 className="text-xl font-serif text-yellow-500 mb-2">{pkg.title}</h3>
                 <p className="text-gray-400 text-sm mb-4">{pkg.description}</p>
-                
                 <div className="space-y-2 mb-6">
                   <div className="flex justify-between text-sm">
                     <span className="text-gray-500">Base Price</span>
@@ -518,18 +540,115 @@ function PackagesView({ packages }: { packages: any[] }) {
                     <span className="text-white">{pkg.durationHours} hours</span>
                   </div>
                 </div>
-                
                 <div className="flex gap-2">
-                  <Button variant="outline" className="flex-1 border-gray-700 text-gray-300 hover:bg-gray-800">
-                    Edit
-                  </Button>
-                  <Button variant="outline" className="flex-1 border-gray-700 text-gray-300 hover:bg-gray-800">
-                    View Details
-                  </Button>
+                  <Button variant="outline" className="flex-1 border-gray-700 text-gray-300 hover:bg-gray-800" onClick={() => handleEditOpen(pkg)}>Edit</Button>
+                  <Button variant="outline" className="flex-1 border-gray-700 text-gray-300 hover:bg-gray-800" onClick={() => setViewPkg(pkg)}>View Details</Button>
                 </div>
               </Card>
             </motion.div>
           ))}
+        </div>
+      )}
+
+      {/* View Details Modal */}
+      {viewPkg && (
+        <div className="fixed inset-0 bg-black/70 flex items-center justify-center z-50">
+          <div className="bg-gray-900 border border-gray-700 rounded-xl p-8 w-full max-w-md">
+            <div className="flex justify-between items-center mb-6">
+              <h2 className="text-2xl font-serif text-yellow-500">Package Details</h2>
+              <button onClick={() => setViewPkg(null)} className="text-gray-400 hover:text-white text-xl">✕</button>
+            </div>
+            <div className="space-y-4">
+              <div><span className="text-gray-400 text-sm">Name</span><p className="text-white font-semibold">{viewPkg.title}</p></div>
+              <div><span className="text-gray-400 text-sm">Type</span><p className="text-white">{viewPkg.type}</p></div>
+              <div><span className="text-gray-400 text-sm">Description</span><p className="text-white">{viewPkg.description}</p></div>
+              <div><span className="text-gray-400 text-sm">Base Price</span><p className="text-yellow-400 font-bold text-lg">LKR {viewPkg.basePrice.toLocaleString()}</p></div>
+              <div><span className="text-gray-400 text-sm">Duration</span><p className="text-white">{viewPkg.durationHours} hours</p></div>
+              <div><span className="text-gray-400 text-sm">Status</span><p className={viewPkg.active ? "text-green-400" : "text-gray-400"}>{viewPkg.active ? "Active" : "Inactive"}</p></div>
+            </div>
+            <Button className="w-full mt-6 bg-red-700 hover:bg-red-800 text-white" onClick={() => setViewPkg(null)}>Close</Button>
+          </div>
+        </div>
+      )}
+
+      {/* Edit Modal */}
+      {editPkg && (
+        <div className="fixed inset-0 bg-black/70 flex items-center justify-center z-50">
+          <div className="bg-gray-900 border border-gray-700 rounded-xl p-8 w-full max-w-md">
+            <div className="flex justify-between items-center mb-6">
+              <h2 className="text-2xl font-serif text-yellow-500">Edit Package</h2>
+              <button onClick={() => setEditPkg(null)} className="text-gray-400 hover:text-white text-xl">✕</button>
+            </div>
+            <div className="space-y-4">
+              <div>
+                <label className="text-gray-400 text-sm">Package Name</label>
+                <input className="w-full bg-gray-800 border border-gray-700 text-white rounded-lg p-2 mt-1" value={editForm.title || ''} onChange={e => setEditForm({ ...editForm, title: e.target.value })} />
+              </div>
+              <div>
+                <label className="text-gray-400 text-sm">Type</label>
+                <input className="w-full bg-gray-800 border border-gray-700 text-white rounded-lg p-2 mt-1" value={editForm.type || ''} onChange={e => setEditForm({ ...editForm, type: e.target.value })} />
+              </div>
+              <div>
+                <label className="text-gray-400 text-sm">Description</label>
+                <textarea className="w-full bg-gray-800 border border-gray-700 text-white rounded-lg p-2 mt-1" rows={3} value={editForm.description || ''} onChange={e => setEditForm({ ...editForm, description: e.target.value })} />
+              </div>
+              <div>
+                <label className="text-gray-400 text-sm">Base Price (LKR)</label>
+                <input type="number" className="w-full bg-gray-800 border border-gray-700 text-white rounded-lg p-2 mt-1" value={editForm.basePrice || ''} onChange={e => setEditForm({ ...editForm, basePrice: Number(e.target.value) })} />
+              </div>
+              <div>
+                <label className="text-gray-400 text-sm">Duration (hours)</label>
+                <input type="number" className="w-full bg-gray-800 border border-gray-700 text-white rounded-lg p-2 mt-1" value={editForm.durationHours || ''} onChange={e => setEditForm({ ...editForm, durationHours: Number(e.target.value) })} />
+              </div>
+            </div>
+            <div className="flex gap-3 mt-6">
+              <Button variant="outline" className="flex-1 border-gray-700 text-gray-300 hover:bg-gray-800" onClick={() => setEditPkg(null)}>Cancel</Button>
+              <Button className="flex-1 bg-red-700 hover:bg-red-800 text-white" onClick={handleEditSave}>Save Changes</Button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* New Package Modal */}
+      {showNewForm && (
+        <div className="fixed inset-0 bg-black/70 flex items-center justify-center z-50">
+          <div className="bg-gray-900 border border-gray-700 rounded-xl p-8 w-full max-w-md">
+            <div className="flex justify-between items-center mb-6">
+              <h2 className="text-2xl font-serif text-yellow-500">New Package</h2>
+              <button onClick={() => setShowNewForm(false)} className="text-gray-400 hover:text-white text-xl">✕</button>
+            </div>
+            <div className="space-y-4">
+              <div>
+                <label className="text-gray-400 text-sm">Package Name *</label>
+                <input className="w-full bg-gray-800 border border-gray-700 text-white rounded-lg p-2 mt-1" placeholder="e.g. Wedding Silver" value={newForm.title} onChange={e => setNewForm({ ...newForm, title: e.target.value })} />
+              </div>
+              <div>
+                <label className="text-gray-400 text-sm">Type</label>
+                <select className="w-full bg-gray-800 border border-gray-700 text-white rounded-lg p-2 mt-1" value={newForm.type} onChange={e => setNewForm({ ...newForm, type: e.target.value })}>
+                  <option value="Wedding">Wedding</option>
+                  <option value="Event">Event</option>
+                  <option value="Studio">Studio</option>
+                  <option value="Outdoor">Outdoor</option>
+                </select>
+              </div>
+              <div>
+                <label className="text-gray-400 text-sm">Description</label>
+                <textarea className="w-full bg-gray-800 border border-gray-700 text-white rounded-lg p-2 mt-1" rows={3} placeholder="Package description..." value={newForm.description} onChange={e => setNewForm({ ...newForm, description: e.target.value })} />
+              </div>
+              <div>
+                <label className="text-gray-400 text-sm">Base Price (LKR) *</label>
+                <input type="number" className="w-full bg-gray-800 border border-gray-700 text-white rounded-lg p-2 mt-1" placeholder="e.g. 50000" value={newForm.basePrice} onChange={e => setNewForm({ ...newForm, basePrice: e.target.value })} />
+              </div>
+              <div>
+                <label className="text-gray-400 text-sm">Duration (hours) *</label>
+                <input type="number" className="w-full bg-gray-800 border border-gray-700 text-white rounded-lg p-2 mt-1" placeholder="e.g. 4" value={newForm.durationHours} onChange={e => setNewForm({ ...newForm, durationHours: e.target.value })} />
+              </div>
+            </div>
+            <div className="flex gap-3 mt-6">
+              <Button variant="outline" className="flex-1 border-gray-700 text-gray-300 hover:bg-gray-800" onClick={() => setShowNewForm(false)}>Cancel</Button>
+              <Button className="flex-1 bg-red-700 hover:bg-red-800 text-white" onClick={handleNewSave}>Add Package</Button>
+            </div>
+          </div>
         </div>
       )}
     </div>
