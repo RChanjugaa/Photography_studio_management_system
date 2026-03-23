@@ -117,7 +117,7 @@ export default function CreateBooking() {
     setLoading(true);
     setTimeout(() => {
       toast.success('Booking created successfully!');
-      navigate('/bookings');
+      navigate('/admin/bookings');
       setLoading(false);
     }, 1000);
   };
