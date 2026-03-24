@@ -116,6 +116,19 @@ export default function CreateBooking() {
   const handleSubmit = () => {
     setLoading(true);
     setTimeout(() => {
+      const newBooking = {
+        id: `BK-${Date.now()}`,
+        clientName: selectedClient?.name || 'Unknown',
+        clientId: selectedClient?.id || '',
+        packageName: selectedPackage?.title || selectedPackage?.name || '',
+        packageType: selectedPackage?.type || '',
+        scheduledDate: selectedDate,
+        scheduledTime: selectedTime || '09:00 - 17:00',
+        photographer: '',
+        status: 'Pending',
+      };
+      const existing = JSON.parse(localStorage.getItem('bookings') || '[]');
+      localStorage.setItem('bookings', JSON.stringify([...existing, newBooking]));
       toast.success('Booking created successfully!');
       navigate('/admin/bookings');
       setLoading(false);
