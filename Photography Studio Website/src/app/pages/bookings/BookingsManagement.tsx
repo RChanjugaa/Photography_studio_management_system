@@ -72,6 +72,10 @@ export default function BookingsManagement() {
   const [typeFilter, setTypeFilter] = useState('all');
   const [currentMonth, setCurrentMonth] = useState(new Date());
   const navigate = useNavigate();
+  const [bookingsList, setBookingsList] = useState(() => {
+    const saved = JSON.parse(localStorage.getItem('bookings') || '[]');
+    return [...mockBookings, ...saved];
+  });
   
   // Protect admin route
   useEffect(() => {
@@ -82,7 +86,7 @@ export default function BookingsManagement() {
     }
   }, [navigate]);
   
-  const filteredBookings = mockBookings.filter(booking => {
+  const filteredBookings = bookingsList.filter(booking => {
     const matchesSearch = booking.clientName.toLowerCase().includes(searchQuery.toLowerCase()) ||
                          booking.id.toLowerCase().includes(searchQuery.toLowerCase());
     const matchesStatus = statusFilter === 'all' || booking.status === statusFilter;
