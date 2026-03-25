@@ -1,6 +1,6 @@
 import { useEffect } from 'react';
 import { Link, useNavigate } from 'react-router';
-import { Users, DollarSign, Calendar, TrendingUp, UserCheck, UserX, Eye, Briefcase, ImageIcon } from 'lucide-react';
+import { Users, DollarSign, Calendar, TrendingUp, UserCheck, UserX, Eye, Briefcase, ImageIcon, BookOpen } from 'lucide-react';
 import { Card } from '../../components/ui/card';
 import { Button } from '../../components/ui/button';
 import { Badge } from '../../components/ui/badge';
@@ -20,16 +20,18 @@ export default function AdminDashboard() {
   }, [navigate]);
   
   const stats = [
+    { label: 'Total Clients', value: '24', icon: UserCheck, color: 'text-green-400', bg: 'bg-green-900/30', border: 'border-green-800' },
+    { label: 'Total Bookings', value: '18', icon: BookOpen, color: 'text-orange-400', bg: 'bg-orange-900/30', border: 'border-orange-800' },
     { label: 'Total Employees', value: '12', icon: Users, color: 'text-blue-400', bg: 'bg-blue-900/30', border: 'border-blue-800' },
     { label: 'Total Events', value: '4', icon: Calendar, color: 'text-purple-400', bg: 'bg-purple-900/30', border: 'border-purple-800' },
-    { label: 'Photo Galleries', value: '24', icon: ImageIcon, color: 'text-green-400', bg: 'bg-green-900/30', border: 'border-green-800' },
     { label: 'Revenue (Month)', value: 'Rs. 450K', icon: DollarSign, color: 'text-yellow-400', bg: 'bg-yellow-900/30', border: 'border-yellow-800' },
   ];
   
   const quickActions = [
+    { label: 'Manage Clients', description: 'View client accounts and login status', icon: UserCheck, link: '/admin/clients', color: 'bg-green-700' },
+    { label: 'Manage Bookings', description: 'View booking history and booking details', icon: BookOpen, link: '/admin/bookings', color: 'bg-orange-700' },
     { label: 'Manage Employees', description: 'Add, edit, or remove staff members', icon: Users, link: '/admin/employees', color: 'bg-red-700' },
     { label: 'Manage Events', description: 'Create and manage photography events', icon: Calendar, link: '/admin/events', color: 'bg-purple-700' },
-    { label: 'Photo Galleries', description: 'Upload and deliver client photos', icon: ImageIcon, link: '/gallery', color: 'bg-green-700' },
     { label: 'Payments & Invoices', description: 'Record payments and generate invoices', icon: DollarSign, link: '/admin/payments', color: 'bg-blue-700' },
   ];
   

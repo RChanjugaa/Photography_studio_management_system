@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router';
-import { Search, Calendar as CalendarIcon, Package, Plus, ChevronLeft, ChevronRight, Filter, Clock } from 'lucide-react';
+import { Search, Calendar as CalendarIcon, Package, Plus, ChevronLeft, ChevronRight, Filter, Clock, BarChart3, TrendingUp, DollarSign, CheckCircle, Trash2, Edit } from 'lucide-react';
 import { Button } from '../../components/ui/button';
 import { Input } from '../../components/ui/input';
 import { Card } from '../../components/ui/card';
@@ -17,53 +17,7 @@ import { format, addMonths, subMonths, startOfMonth, endOfMonth, eachDayOfInterv
 import { motion } from 'motion/react';
 import { toast } from 'sonner';
 import AdminNavigation from '../../components/AdminNavigation';
-
-// Mock data
-const mockBookings = [
-  {
-    id: 'BK-1001',
-    clientName: 'Sarah & John',
-    clientId: 'CL-3001',
-    packageName: 'Wedding Gold',
-    packageType: 'Wedding',
-    scheduledDate: new Date(2026, 2, 21),
-    scheduledTime: '14:00 - 20:00',
-    photographer: 'David Park',
-    status: 'Confirmed',
-  },
-  {
-    id: 'BK-1002',
-    clientName: 'Tech Solutions Ltd',
-    clientId: 'CL-3002',
-    packageName: 'Corporate Event',
-    packageType: 'Event',
-    scheduledDate: new Date(2026, 2, 25),
-    scheduledTime: '10:00 - 16:00',
-    photographer: 'Lisa Wong',
-    status: 'Pending',
-  },
-];
-
-const mockPackages = [
-  {
-    id: 'PKG-101',
-    type: 'Wedding',
-    title: 'Wedding Gold',
-    basePrice: 125000,
-    durationHours: 6,
-    description: 'Candid + traditional coverage, 2 photographers',
-    active: true,
-  },
-  {
-    id: 'PKG-102',
-    type: 'Event',
-    title: 'Corporate Event',
-    basePrice: 85000,
-    durationHours: 8,
-    description: 'Multi-camera setup, highlight reel',
-    active: true,
-  },
-];
+import { bookingsAPI } from '../../../services/api';
 
 export default function BookingsManagement() {
   const [activeTab, setActiveTab] = useState('list');
@@ -71,77 +25,199 @@ export default function BookingsManagement() {
   const [statusFilter, setStatusFilter] = useState('all');
   const [typeFilter, setTypeFilter] = useState('all');
   const [currentMonth, setCurrentMonth] = useState(new Date());
+  const [bookings, setBookings] = useState<any[]>([]);
+  const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
-  const [bookingsList, setBookingsList] = useState(() => {
-    const saved = JSON.parse(localStorage.getItem('bookings') || '[]');
-    return [...mockBookings, ...saved];
-  });
-  
-  // Protect admin route
+
   useEffect(() => {
     const userRole = localStorage.getItem('userRole');
     if (userRole !== 'admin') {
       toast.error('Access denied. Admin privileges required.');
       navigate('/admin/login');
+      return;
     }
+    fetchBookings();
   }, [navigate]);
-  
-  const filteredBookings = bookingsList.filter(booking => {
-    const matchesSearch = booking.clientName.toLowerCase().includes(searchQuery.toLowerCase()) ||
-                         booking.id.toLowerCase().includes(searchQuery.toLowerCase());
-    const matchesStatus = statusFilter === 'all' || booking.status === statusFilter;
-    const matchesType = typeFilter === 'all' || booking.packageType === typeFilter;
-    return matchesSearch && matchesStatus && matchesType;
-  });
-  
-  const getStatusColor = (status: string) => {
-    switch (status) {
-      case 'Confirmed': return 'bg-green-500/20 text-green-400 border-green-500/30';
-      case 'Pending': return 'bg-blue-500/20 text-blue-400 border-blue-500/30';
-      case 'Cancelled': return 'bg-gray-500/20 text-gray-400 border-gray-500/30';
-      case 'Completed': return 'bg-yellow-500/20 text-yellow-400 border-yellow-500/30';
-      default: return 'bg-gray-500/20 text-gray-400 border-gray-500/30';
+
+  const fetchBookings = async () => {
+    setLoading(true);
+    try {
+      const response = await bookingsAPI.getAll();
+      if (response.success && Array.isArray(response.data)) {
+        setBookings(response.data);
+      } else {
+        toast.error(response.message || 'Failed to fetch bookings');
+      }
+    } catch (error) {
+      console.error('Error fetching bookings:', error);
+      toast.error('Error fetching bookings from server');
+    } finally {
+      setLoading(false);
     }
   };
-  
+
+  const handleDeleteBooking = async (id: number) => {
+    if (!window.confirm('Are you sure you want to delete this booking? This action cannot be undone.')) return;
+
+    try {
+      const response = await bookingsAPI.delete(id);
+      if (response.success) {
+        toast.success('Booking deleted successfully');
+        setBookings((prev) => prev.filter((booking) => booking.id !== id));
+      } else {
+        toast.error(response.message || 'Failed to delete booking');
+      }
+    } catch (error) {
+      console.error('Error deleting booking:', error);
+      toast.error('Error deleting booking');
+    }
+  };
+
+  const handleStatusChange = async (id: number, status: string) => {
+    try {
+      const response = await bookingsAPI.updateStatus(id, status);
+      if (response.success) {
+        toast.success('Booking status updated');
+        setBookings((prev) => prev.map((booking) => (booking.id === id ? { ...booking, status } : booking)));
+      } else {
+        toast.error(response.message || 'Failed to update status');
+      }
+    } catch (error) {
+      console.error('Error updating status:', error);
+      toast.error('Error updating booking status');
+    }
+  };
+
+  const getClientName = (booking: any) => {
+    if (booking.first_name || booking.last_name) {
+      return `${booking.first_name || ''} ${booking.last_name || ''}`.trim();
+    }
+    if (booking.client_name) return booking.client_name;
+    return booking.clientId || 'Unknown Client';
+  };
+
+  const getServiceType = (booking: any) => booking.service_type || booking.packageType || 'N/A';
+
+  const filteredBookings = bookings.filter((booking) => {
+    const clientName = getClientName(booking).toLowerCase();
+    const bookingCode = (booking.booking_number || booking.id || '').toString().toLowerCase();
+
+    const matchesSearch =
+      clientName.includes(searchQuery.toLowerCase()) ||
+      bookingCode.includes(searchQuery.toLowerCase());
+
+    const matchesStatus = statusFilter === 'all' || booking.status === statusFilter;
+    const matchesType = typeFilter === 'all' || getServiceType(booking).toLowerCase().includes(typeFilter.toLowerCase());
+
+    return matchesSearch && matchesStatus && matchesType;
+  });
+
+  const bookingStats = {
+    total: bookings.length,
+    pending: bookings.filter((b) => b.status === 'pending').length,
+    confirmed: bookings.filter((b) => b.status === 'confirmed').length,
+    completed: bookings.filter((b) => b.status === 'completed').length,
+    cancelled: bookings.filter((b) => b.status === 'cancelled').length,
+    totalRevenue: bookings.reduce((sum, b) => sum + parseFloat(b.amount || 0), 0),
+  };
+
+  const getStatusColor = (status: string) => {
+    switch (status) {
+      case 'confirmed':
+        return 'bg-green-500/20 text-green-400 border-green-500/30';
+      case 'pending':
+        return 'bg-blue-500/20 text-blue-400 border-blue-500/30';
+      case 'cancelled':
+        return 'bg-gray-500/20 text-gray-400 border-gray-500/30';
+      case 'completed':
+        return 'bg-yellow-500/20 text-yellow-400 border-yellow-500/30';
+      default:
+        return 'bg-gray-500/20 text-gray-400 border-gray-500/30';
+    }
+  };
+
   return (
     <div className="min-h-screen bg-black">
       <AdminNavigation />
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
-        {/* Header */}
-        <div className="mb-8">
-          <h1 className="text-4xl font-serif text-yellow-500 mb-2 uppercase">Bookings & Services</h1>
-          <p className="text-gray-400">Manage studio bookings, packages and calendar availability</p>
+        <div className="mb-8 flex flex-col md:flex-row justify-between gap-4">
+          <div>
+            <h1 className="text-4xl font-serif text-yellow-500 mb-2 uppercase">Bookings Management</h1>
+            <p className="text-gray-400">Manage all booking requests and confirmations</p>
+          </div>
+          <div className="flex gap-3 items-center">
+            <Link to="/admin/bookings/new">
+              <Button className="bg-red-700 hover:bg-red-800 text-white">
+                <Plus className="size-4 mr-2" /> Create Booking
+              </Button>
+            </Link>
+          </div>
         </div>
-        
-        {/* Tabs */}
+
+        <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-5 gap-4 mb-8">
+          <Card className="border-2 border-gray-800 bg-gradient-to-br from-[#2a0f0f] to-black p-4">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-gray-400 text-sm mb-1">Total Bookings</p>
+                <p className="text-3xl font-bold text-yellow-500">{bookingStats.total}</p>
+              </div>
+              <BarChart3 className="size-10 text-yellow-500 opacity-50" />
+            </div>
+          </Card>
+          <Card className="border-2 border-gray-800 bg-gradient-to-br from-[#2a0f0f] to-black p-4">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-gray-400 text-sm mb-1">Pending</p>
+                <p className="text-3xl font-bold text-blue-400">{bookingStats.pending}</p>
+              </div>
+              <Clock className="size-10 text-blue-400 opacity-50" />
+            </div>
+          </Card>
+          <Card className="border-2 border-gray-800 bg-gradient-to-br from-[#2a0f0f] to-black p-4">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-gray-400 text-sm mb-1">Confirmed</p>
+                <p className="text-3xl font-bold text-green-400">{bookingStats.confirmed}</p>
+              </div>
+              <CheckCircle className="size-10 text-green-400 opacity-50" />
+            </div>
+          </Card>
+          <Card className="border-2 border-gray-800 bg-gradient-to-br from-[#2a0f0f] to-black p-4">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-gray-400 text-sm mb-1">Completed</p>
+                <p className="text-3xl font-bold text-purple-400">{bookingStats.completed}</p>
+              </div>
+              <TrendingUp className="size-10 text-purple-400 opacity-50" />
+            </div>
+          </Card>
+          <Card className="border-2 border-gray-800 bg-gradient-to-br from-[#2a0f0f] to-black p-4">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-gray-400 text-sm mb-1">Total Revenue</p>
+                <p className="text-2xl font-bold text-orange-400">Rs.{(bookingStats.totalRevenue || 0).toLocaleString()}</p>
+              </div>
+              <DollarSign className="size-10 text-orange-400 opacity-50" />
+            </div>
+          </Card>
+        </div>
+
         <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
           <div className="border-b border-gray-800">
             <TabsList className="bg-transparent h-auto p-0 space-x-8">
-              <TabsTrigger
-                value="list"
-                className="bg-transparent data-[state=active]:bg-transparent data-[state=active]:border-b-2 data-[state=active]:border-yellow-500 rounded-none pb-3 text-gray-400 data-[state=active]:text-white"
-              >
+              <TabsTrigger value="list" className="bg-transparent data-[state=active]:bg-transparent data-[state=active]:border-b-2 data-[state=active]:border-yellow-500 rounded-none pb-3 text-gray-400 data-[state=active]:text-white">
                 List
               </TabsTrigger>
-              <TabsTrigger
-                value="calendar"
-                className="bg-transparent data-[state=active]:bg-transparent data-[state=active]:border-b-2 data-[state=active]:border-yellow-500 rounded-none pb-3 text-gray-400 data-[state=active]:text-white"
-              >
+              <TabsTrigger value="calendar" className="bg-transparent data-[state=active]:bg-transparent data-[state=active]:border-b-2 data-[state=active]:border-yellow-500 rounded-none pb-3 text-gray-400 data-[state=active]:text-white">
                 Calendar
               </TabsTrigger>
-              <TabsTrigger
-                value="packages"
-                className="bg-transparent data-[state=active]:bg-transparent data-[state=active]:border-b-2 data-[state=active]:border-yellow-500 rounded-none pb-3 text-gray-400 data-[state=active]:text-white"
-              >
+              <TabsTrigger value="packages" className="bg-transparent data-[state=active]:bg-transparent data-[state=active]:border-b-2 data-[state=active]:border-yellow-500 rounded-none pb-3 text-gray-400 data-[state=active]:text-white">
                 Packages
               </TabsTrigger>
             </TabsList>
           </div>
-          
-          {/* List View */}
+
           <TabsContent value="list" className="space-y-6 mt-6">
-            {/* Filters */}
             <div className="flex flex-col md:flex-row gap-4 items-start md:items-center justify-between">
               <div className="flex flex-col sm:flex-row gap-3 flex-1 w-full">
                 <div className="relative flex-1">
@@ -153,44 +229,40 @@ export default function BookingsManagement() {
                     className="pl-10 bg-gray-900 border-gray-800 text-white placeholder:text-gray-500"
                   />
                 </div>
-                
+
                 <Select value={statusFilter} onValueChange={setStatusFilter}>
                   <SelectTrigger className="w-full sm:w-40 bg-gray-900 border-gray-800 text-white">
                     <SelectValue placeholder="All Status" />
                   </SelectTrigger>
                   <SelectContent className="bg-gray-900 border-gray-800">
-                    <SelectItem value="all" className="text-white hover:bg-gray-700 focus:bg-gray-700 focus:text-white">All Status</SelectItem>
-                    <SelectItem value="Pending" className="text-white hover:bg-gray-700 focus:bg-gray-700 focus:text-white">Pending</SelectItem>
-                    <SelectItem value="Confirmed" className="text-white hover:bg-gray-700 focus:bg-gray-700 focus:text-white">Confirmed</SelectItem>
-                    <SelectItem value="Completed" className="text-white hover:bg-gray-700 focus:bg-gray-700 focus:text-white">Completed</SelectItem>
-                    <SelectItem value="Cancelled" className="text-white hover:bg-gray-700 focus:bg-gray-700 focus:text-white">Cancelled</SelectItem>
+                    <SelectItem value="all">All Status</SelectItem>
+                    <SelectItem value="pending">Pending</SelectItem>
+                    <SelectItem value="confirmed">Confirmed</SelectItem>
+                    <SelectItem value="completed">Completed</SelectItem>
+                    <SelectItem value="cancelled">Cancelled</SelectItem>
                   </SelectContent>
                 </Select>
-                
+
                 <Select value={typeFilter} onValueChange={setTypeFilter}>
                   <SelectTrigger className="w-full sm:w-40 bg-gray-900 border-gray-800 text-white">
                     <SelectValue placeholder="All Types" />
                   </SelectTrigger>
                   <SelectContent className="bg-gray-900 border-gray-800">
-                    <SelectItem value="all" className="text-white hover:bg-gray-700 focus:bg-gray-700 focus:text-white">All Types</SelectItem>
-                    <SelectItem value="Wedding" className="text-white hover:bg-gray-700 focus:bg-gray-700 focus:text-white">Wedding</SelectItem>
-                    <SelectItem value="Event" className="text-white hover:bg-gray-700 focus:bg-gray-700 focus:text-white">Event</SelectItem>
-                    <SelectItem value="Studio" className="text-white hover:bg-gray-700 focus:bg-gray-700 focus:text-white">Studio</SelectItem>
-                    <SelectItem value="Outdoor" className="text-white hover:bg-gray-700 focus:bg-gray-700 focus:text-white">Outdoor</SelectItem>
+                    <SelectItem value="all">All Types</SelectItem>
+                    <SelectItem value="Photography">Photography</SelectItem>
+                    <SelectItem value="Cinematography">Cinematography</SelectItem>
+                    <SelectItem value="DJ">DJ</SelectItem>
+                    <SelectItem value="Event Management">Event Management</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
-              
-              <Link to="/admin/bookings/new">
-                <Button className="bg-red-700 hover:bg-red-800 text-white">
-                  <Plus className="size-4 mr-2" />
-                  Create Booking
-                </Button>
-              </Link>
             </div>
-            
-            {/* Bookings List */}
-            {filteredBookings.length === 0 ? (
+
+            {loading ? (
+              <Card className="border-2 border-gray-800 bg-gradient-to-br from-[#2a0f0f] to-black p-16 text-center">
+                <p className="text-gray-400">Loading bookings...</p>
+              </Card>
+            ) : filteredBookings.length === 0 ? (
               <Card className="border-2 border-gray-800 bg-gradient-to-br from-[#2a0f0f] to-black p-16">
                 <div className="text-center">
                   <div className="flex justify-center mb-4">
@@ -210,78 +282,94 @@ export default function BookingsManagement() {
               </Card>
             ) : (
               <div className="space-y-3">
-                {/* Table Header */}
-                <div className="grid grid-cols-12 gap-4 px-6 py-3 bg-gray-900 border border-gray-800 rounded-lg text-sm font-medium text-gray-400 uppercase tracking-wide">
-                  <div className="col-span-2">Booking ID</div>
+                <div className="grid grid-cols-12 gap-3 px-6 py-3 bg-gray-900 border border-gray-800 rounded-lg text-sm font-medium text-gray-400 uppercase tracking-wide">
+                  <div className="col-span-2">Booking #</div>
                   <div className="col-span-2">Client</div>
-                  <div className="col-span-2">Package</div>
-                  <div className="col-span-2">Date & Time</div>
-                  <div className="col-span-2">Photographer</div>
-                  <div className="col-span-1">Status</div>
+                  <div className="col-span-2">Date</div>
+                  <div className="col-span-1">Amount</div>
+                  <div className="col-span-2">Service</div>
+                  <div className="col-span-2">Status</div>
                   <div className="col-span-1 text-right">Actions</div>
                 </div>
-                
-                {/* Table Rows */}
-                {filteredBookings.map((booking, idx) => (
-                  <motion.div
-                    key={booking.id}
-                    initial={{ opacity: 0, y: 20 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ duration: 0.3, delay: idx * 0.05 }}
-                  >
-                    <Card className="border-2 border-gray-800 hover:border-yellow-500/50 transition-colors bg-gradient-to-r from-[#2a0f0f] to-black">
-                      <div className="grid grid-cols-12 gap-4 px-6 py-4 items-center">
-                        <div className="col-span-2">
-                          <div className="font-mono text-yellow-500">{booking.id}</div>
-                        </div>
-                        <div className="col-span-2">
-                          <div className="font-medium text-white">{booking.clientName}</div>
-                          <div className="text-sm text-gray-500">{booking.clientId}</div>
-                        </div>
-                        <div className="col-span-2">
-                          <div className="text-white">{booking.packageName}</div>
-                          <div className="text-sm text-gray-500">{booking.packageType}</div>
-                        </div>
-                        <div className="col-span-2">
-                          <div className="text-white">{format(booking.scheduledDate, 'MMM dd, yyyy')}</div>
-                          <div className="text-sm text-gray-500">{booking.scheduledTime}</div>
-                        </div>
-                        <div className="col-span-2 text-white">
-                          {booking.photographer}
-                        </div>
-                        <div className="col-span-1">
-                          <Badge className={`${getStatusColor(booking.status)} border`}>
-                            {booking.status}
-                          </Badge>
-                        </div>
-                        <div className="col-span-1 text-right">
-                          <Link to={`/bookings/${booking.id}`}>
-                            <Button variant="ghost" size="sm" className="text-yellow-500 hover:text-yellow-400 hover:bg-yellow-500/10">
-                              View
+                {filteredBookings.map((booking, idx) => {
+                  const eventDate = booking.event_date ? new Date(booking.event_date) : new Date(booking.booking_date);
+                  const assignedEmployees = Array.isArray(booking.assigned_employees) ? booking.assigned_employees : (booking.assigned_employees ? JSON.parse(booking.assigned_employees) : []);
+
+                  return (
+                    <motion.div
+                      key={booking.id}
+                      initial={{ opacity: 0, y: 20 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      transition={{ duration: 0.3, delay: idx * 0.03 }}
+                    >
+                      <Card className="border-2 border-gray-800 hover:border-yellow-500/50 transition-colors bg-gradient-to-r from-[#2a0f0f] to-black">
+                        <div className="grid grid-cols-12 gap-3 px-6 py-4 items-center">
+                          <div className="col-span-2">
+                            <div className="font-mono text-yellow-500 text-sm">{booking.booking_number || `#${booking.id}`}</div>
+                            <div className="text-xs text-gray-500">{getServiceType(booking)}</div>
+                          </div>
+                          <div className="col-span-2">
+                            <div className="font-medium text-white text-sm">{getClientName(booking)}</div>
+                            <div className="text-xs text-gray-500">Client ID: {booking.client_id || 'N/A'}</div>
+                          </div>
+                          <div className="col-span-2">
+                            <div className="text-white text-sm">{eventDate.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}</div>
+                            <div className="text-xs text-gray-500">{booking.event_time || 'TBD'}</div>
+                          </div>
+                          <div className="col-span-1">
+                            <div className="text-orange-400 font-semibold text-sm">Rs.{parseFloat(booking.amount || 0).toLocaleString()}</div>
+                          </div>
+                          <div className="col-span-2 text-white text-sm">{assignedEmployees.length ? assignedEmployees.join(', ') : 'Unassigned'}</div>
+                          <div className="col-span-2">
+                            <select
+                              className="w-full rounded-lg bg-gray-900 border border-gray-700 text-white px-2 py-1 text-xs"
+                              value={booking.status || 'pending'}
+                              onChange={(e) => handleStatusChange(booking.id, e.target.value)}
+                            >
+                              <option value="pending">Pending</option>
+                              <option value="confirmed">Confirmed</option>
+                              <option value="in_progress">In Progress</option>
+                              <option value="completed">Completed</option>
+                              <option value="cancelled">Cancelled</option>
+                            </select>
+                          </div>
+                          <div className="col-span-1 text-right flex justify-end gap-1">
+                            <Link to={`/admin/bookings/${booking.id}`}>
+                              <Button variant="ghost" size="sm" className="text-yellow-500 hover:text-yellow-400 hover:bg-yellow-500/10">
+                                <Edit className="size-4" />
+                              </Button>
+                            </Link>
+                            <Button variant="ghost" size="sm" className="text-red-400 hover:text-red-300 hover:bg-red-500/10" onClick={() => handleDeleteBooking(booking.id)}>
+                              <Trash2 className="size-4" />
                             </Button>
-                          </Link>
+                          </div>
                         </div>
-                      </div>
-                    </Card>
-                  </motion.div>
-                ))}
+                      </Card>
+                    </motion.div>
+                  );
+                })}
               </div>
             )}
           </TabsContent>
-          
-          {/* Calendar View */}
+
           <TabsContent value="calendar" className="space-y-6 mt-6">
             <CalendarView
               currentMonth={currentMonth}
               setCurrentMonth={setCurrentMonth}
-              bookings={mockBookings}
+              bookings={bookings.map((booking) => ({
+                ...booking,
+                scheduledDate: booking.event_date ? new Date(booking.event_date) : new Date(booking.booking_date),
+                status: booking.status || 'pending',
+                clientName: getClientName(booking),
+                packageType: getServiceType(booking),
+                packageName: getServiceType(booking),
+              }))}
               getStatusColor={getStatusColor}
             />
           </TabsContent>
-          
-          {/* Packages View */}
+
           <TabsContent value="packages" className="space-y-6 mt-6">
-            <PackagesView packages={mockPackages} />
+            <PackagesView packages={[] /* keep existing local packing sample or integrate real packages here */} />
           </TabsContent>
         </Tabs>
       </div>
@@ -289,7 +377,6 @@ export default function BookingsManagement() {
   );
 }
 
-// Calendar Component
 function CalendarView({ currentMonth, setCurrentMonth, bookings, getStatusColor }: {
   currentMonth: Date;
   setCurrentMonth: (date: Date) => void;
@@ -300,28 +387,18 @@ function CalendarView({ currentMonth, setCurrentMonth, bookings, getStatusColor 
   const monthEnd = endOfMonth(currentMonth);
   const days = eachDayOfInterval({ start: monthStart, end: monthEnd });
   const [selectedDay, setSelectedDay] = useState<Date | null>(null);
-  
+
   const previousMonth = () => setCurrentMonth(subMonths(currentMonth, 1));
   const nextMonth = () => setCurrentMonth(addMonths(currentMonth, 1));
   const goToToday = () => setCurrentMonth(new Date());
-  
+
   const getBookingsForDay = (day: Date) => {
-    return bookings.filter(booking => isSameDay(booking.scheduledDate, day));
+    return bookings.filter((booking) => isSameDay(new Date(booking.scheduledDate), day));
   };
-  
-  const timeSlots = [
-    '09:00 AM', '10:00 AM', '11:00 AM', '12:00 PM',
-    '01:00 PM', '02:00 PM', '03:00 PM', '04:00 PM', '05:00 PM'
-  ];
-  
-  // Mock booked slots for demo
-  const bookedSlots = ['10:00 AM', '01:00 PM', '04:00 PM'];
-  
+
   return (
     <div className="grid lg:grid-cols-3 gap-8">
-      {/* Calendar Section */}
       <div className="lg:col-span-2">
-        {/* Calendar Header */}
         <div className="flex items-center justify-between mb-6">
           <div className="flex items-center gap-4">
             <button onClick={previousMonth} className="p-2 hover:bg-gray-800 rounded-lg text-gray-400 hover:text-white transition-colors">
@@ -334,15 +411,13 @@ function CalendarView({ currentMonth, setCurrentMonth, bookings, getStatusColor 
               <ChevronRight className="size-5" />
             </button>
           </div>
-          
+
           <Button onClick={goToToday} variant="outline" className="border-gray-800 text-gray-400 hover:text-white hover:bg-gray-800">
             Today
           </Button>
         </div>
-        
-        {/* Calendar Grid */}
+
         <Card className="border-2 border-gray-800 bg-gradient-to-br from-[#2a0f0f] to-black overflow-hidden">
-          {/* Week days header */}
           <div className="grid grid-cols-7 border-b border-gray-800">
             {['SUN', 'MON', 'TUE', 'WED', 'THU', 'FRI', 'SAT'].map((day) => (
               <div key={day} className="py-3 text-center text-sm font-medium text-gray-500 uppercase tracking-wide">
@@ -350,54 +425,37 @@ function CalendarView({ currentMonth, setCurrentMonth, bookings, getStatusColor 
               </div>
             ))}
           </div>
-          
-          {/* Calendar days */}
+
           <div className="grid grid-cols-7">
-            {/* Empty cells for days before month starts */}
             {Array.from({ length: monthStart.getDay() }).map((_, idx) => (
               <div key={`empty-${idx}`} className="aspect-square border-r border-b border-gray-800 bg-gray-900/30"></div>
             ))}
-            
-            {/* Actual days */}
             {days.map((day) => {
               const dayBookings = getBookingsForDay(day);
               const isCurrentDay = isToday(day);
               const isSelected = selectedDay && isSameDay(day, selectedDay);
-              
+
               return (
                 <button
                   key={day.toString()}
                   onClick={() => setSelectedDay(day)}
-                  className={`aspect-square border-r border-b border-gray-800 p-2 hover:bg-gray-800/50 transition-colors ${
-                    !isSameMonth(day, currentMonth) ? 'bg-gray-900/30' : ''
-                  } ${isCurrentDay ? 'bg-yellow-500/10' : ''} ${
-                    isSelected ? 'ring-2 ring-yellow-500 ring-inset' : ''
-                  }`}
+                  className={`aspect-square border-r border-b border-gray-800 p-2 hover:bg-gray-800/50 transition-colors ${!isSameMonth(day, currentMonth) ? 'bg-gray-900/30' : ''} ${isCurrentDay ? 'bg-yellow-500/10' : ''} ${isSelected ? 'ring-2 ring-yellow-500 ring-inset' : ''}`}
                 >
                   <div className="flex flex-col h-full">
-                    <div className={`text-sm mb-1 ${isCurrentDay ? 'font-bold' : ''} ${
-                      isCurrentDay ? 'bg-yellow-500 text-black w-7 h-7 rounded-full flex items-center justify-center mx-auto' : 'text-gray-400'
-                    }`}>
+                    <div className={`text-sm mb-1 ${isCurrentDay ? 'font-bold' : ''} ${isCurrentDay ? 'bg-yellow-500 text-black w-7 h-7 rounded-full flex items-center justify-center mx-auto' : 'text-gray-400'}`}>
                       {format(day, 'd')}
                     </div>
-                    
+
                     <div className="space-y-1 flex-1 overflow-hidden">
                       {dayBookings.slice(0, 2).map((booking) => (
                         <div
                           key={booking.id}
-                          className={`text-xs px-1 py-0.5 rounded truncate ${
-                            booking.status === 'Pending' ? 'bg-blue-500/20 text-blue-400' :
-                            booking.status === 'Confirmed' ? 'bg-green-500/20 text-green-400' :
-                            'bg-gray-500/20 text-gray-400'
-                          }`}
-                          title={`${booking.clientName} - ${booking.packageName}`}
+                          className={`text-xs px-1 py-0.5 rounded truncate ${booking.status === 'pending' ? 'bg-blue-500/20 text-blue-400' : booking.status === 'confirmed' ? 'bg-green-500/20 text-green-400' : 'bg-gray-500/20 text-gray-400'}`}
+                          title={`${getClientName(booking)} - ${getServiceType(booking)}`}
                         >
-                          {booking.clientName.split(' ')[0]}
+                          {getClientName(booking)}
                         </div>
                       ))}
-                      {dayBookings.length > 2 && (
-                        <div className="text-xs text-gray-500">+{dayBookings.length - 2}</div>
-                      )}
                     </div>
                   </div>
                 </button>
@@ -406,253 +464,48 @@ function CalendarView({ currentMonth, setCurrentMonth, bookings, getStatusColor 
           </div>
         </Card>
       </div>
-      
-      {/* Available Times Section */}
-      <div>
-        <div className="mb-6">
-          <h3 className="text-xl font-serif text-yellow-500 mb-2 flex items-center gap-2">
-            <Clock className="size-5" />
-            Available Times
-          </h3>
-          <p className="text-sm text-gray-400">
-            {selectedDay ? format(selectedDay, 'MMMM dd, yyyy') : 'Select a date to view times'}
-          </p>
+
+      <div className="bg-gray-900 border border-gray-800 rounded-lg p-4">
+        <div className="flex items-center justify-between mb-3">
+          <p className="text-sm text-gray-400">Selected day</p>
+          <p className="text-sm text-gray-400">{selectedDay ? format(selectedDay, 'MMM dd, yyyy') : 'None'}</p>
         </div>
-        
-        <div className="flex items-center gap-4 mb-4 text-sm">
-          <div className="flex items-center gap-2">
-            <div className="w-3 h-3 rounded-full bg-green-500"></div>
-            <span className="text-gray-400">Available</span>
-          </div>
-          <div className="flex items-center gap-2">
-            <div className="w-3 h-3 rounded-full bg-red-500"></div>
-            <span className="text-gray-400">Not Available</span>
-          </div>
-        </div>
-        
-        <div className="space-y-3">
-          {timeSlots.map((time) => {
-            const isBooked = bookedSlots.includes(time);
-            
-            return (
-              <Card
-                key={time}
-                className={`p-4 border-2 transition-all ${
-                  isBooked
-                    ? 'border-red-500/30 bg-red-500/5'
-                    : 'border-green-500/30 bg-green-500/5 hover:bg-green-500/10 cursor-pointer'
-                }`}
-              >
-                <div className="flex items-center justify-between">
-                  <span className={`font-semibold ${isBooked ? 'text-red-400' : 'text-green-400'}`}>
-                    {time}
-                  </span>
-                  {isBooked && <span className="text-sm text-red-400">Booked</span>}
-                </div>
-              </Card>
-            );
-          })}
+        <div className="space-y-2">
+          {(selectedDay ? getBookingsForDay(selectedDay) : []).map((booking) => (
+            <div key={booking.id} className="p-3 border border-gray-800 rounded-lg bg-black">
+              <p className="text-white text-sm font-medium">{getClientName(booking)}</p>
+              <p className="text-xs text-gray-500">{getServiceType(booking)} - {booking.event_time || 'No time'}</p>
+              <Badge className={`${getStatusColor(booking.status || 'pending')} border text-xs`}>{booking.status || 'pending'}</Badge>
+            </div>
+          ))}
+          {selectedDay && getBookingsForDay(selectedDay).length === 0 && (
+            <p className="text-gray-500 text-sm">No bookings for selected date.</p>
+          )}
         </div>
       </div>
     </div>
   );
 }
 
-// Packages Component
-function PackagesView({ packages: initialPackages }: { packages: any[] }) {
-  const [packageList, setPackageList] = useState<any[]>(initialPackages);
-  const [viewPkg, setViewPkg] = useState<any | null>(null);
-  const [editPkg, setEditPkg] = useState<any | null>(null);
-  const [editForm, setEditForm] = useState<any>({});
-  const [showNewForm, setShowNewForm] = useState(false);
-  const [newForm, setNewForm] = useState({
-    title: '', type: 'Wedding', description: '', basePrice: '', durationHours: '', active: true
-  });
-
-  const handleEditOpen = (pkg: any) => {
-    setEditPkg(pkg);
-    setEditForm({ ...pkg });
-  };
-
-  const handleEditSave = () => {
-    setPackageList(prev => prev.map(p => p.id === editPkg.id ? { ...editForm } : p));
-    toast.success(`Package "${editForm.title}" updated!`);
-    setEditPkg(null);
-  };
-
-  const handleNewSave = () => {
-    if (!newForm.title || !newForm.basePrice || !newForm.durationHours) {
-      toast.error('Please fill all required fields!');
-      return;
-    }
-    const newPkg = {
-      id: Date.now(),
-      ...newForm,
-      basePrice: Number(newForm.basePrice),
-      durationHours: Number(newForm.durationHours),
-    };
-    setPackageList([...packageList, newPkg]);
-    toast.success(`Package "${newForm.title}" added!`);
-    setShowNewForm(false);
-    setNewForm({ title: '', type: 'Wedding', description: '', basePrice: '', durationHours: '', active: true });
-  };
-
+function PackagesView({ packages }: { packages: any[] }) {
   return (
-    <div>
-      <div className="flex justify-between items-center mb-6">
-        <div>
-          <h2 className="text-2xl font-serif text-white">Service Packages</h2>
-          <p className="text-gray-400 mt-1">Manage your photography and event service packages</p>
-        </div>
-        <Button className="bg-red-700 hover:bg-red-800 text-white" onClick={() => setShowNewForm(true)}>
-          <Plus className="size-4 mr-2" />
-          New Package
-        </Button>
-      </div>
-
-      {packageList.length === 0 ? (
-        <Card className="border-2 border-gray-800 bg-gradient-to-br from-[#2a0f0f] to-black p-16">
-          <div className="text-center">
-            <div className="flex justify-center mb-4">
-              <div className="bg-gray-800 p-6 rounded-full">
-                <Package className="size-12 text-gray-600" />
-              </div>
-            </div>
-            <h3 className="text-xl font-semibold text-white mb-2">No packages yet</h3>
-            <p className="text-gray-400 mb-6">Create your first service package to use in bookings.</p>
-            <Button className="bg-red-700 hover:bg-red-800 text-white" onClick={() => setShowNewForm(true)}>Create Package</Button>
-          </div>
+    <div className="space-y-4">
+      {packages.length === 0 ? (
+        <Card className="border-2 border-gray-800 bg-gradient-to-br from-[#2a0f0f] to-black p-8">
+          <p className="text-gray-400">No packages available yet.</p>
         </Card>
       ) : (
-        <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {packageList.map((pkg, idx) => (
-            <motion.div key={pkg.id} initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.3, delay: idx * 0.1 }}>
-              <Card className="border-2 border-gray-800 hover:border-yellow-500/50 transition-colors bg-gradient-to-br from-[#2a0f0f] to-black p-6">
-                <div className="flex items-start justify-between mb-4">
-                  <Badge className="bg-yellow-500/20 text-yellow-400 border border-yellow-500/30">{pkg.type}</Badge>
-                  {pkg.active && <Badge className="bg-green-500/20 text-green-400 border border-green-500/30">Active</Badge>}
-                </div>
-                <h3 className="text-xl font-serif text-yellow-500 mb-2">{pkg.title}</h3>
-                <p className="text-gray-400 text-sm mb-4">{pkg.description}</p>
-                <div className="space-y-2 mb-6">
-                  <div className="flex justify-between text-sm">
-                    <span className="text-gray-500">Base Price</span>
-                    <span className="text-white font-semibold">LKR {pkg.basePrice.toLocaleString()}</span>
-                  </div>
-                  <div className="flex justify-between text-sm">
-                    <span className="text-gray-500">Duration</span>
-                    <span className="text-white">{pkg.durationHours} hours</span>
-                  </div>
-                </div>
-                <div className="flex gap-2">
-                  <Button variant="outline" className="flex-1 border-gray-700 text-gray-300 hover:bg-gray-800" onClick={() => handleEditOpen(pkg)}>Edit</Button>
-                  <Button variant="outline" className="flex-1 border-gray-700 text-gray-300 hover:bg-gray-800" onClick={() => setViewPkg(pkg)}>View Details</Button>
-                </div>
-              </Card>
-            </motion.div>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          {packages.map((pkg) => (
+            <Card key={pkg.id} className="border-2 border-gray-800 bg-gradient-to-br from-[#2a0f0f] to-black p-4">
+              <div className="flex justify-between items-center mb-3">
+                <p className="text-white font-semibold">{pkg.title}</p>
+                <Badge className="bg-yellow-500 text-black">{pkg.type}</Badge>
+              </div>
+              <p className="text-gray-400 text-sm">{pkg.description}</p>
+              <p className="text-white font-semibold mt-3">Rs.{pkg.basePrice}</p>
+            </Card>
           ))}
-        </div>
-      )}
-
-      {/* View Details Modal */}
-      {viewPkg && (
-        <div className="fixed inset-0 bg-black/70 flex items-center justify-center z-50">
-          <div className="bg-gray-900 border border-gray-700 rounded-xl p-8 w-full max-w-md">
-            <div className="flex justify-between items-center mb-6">
-              <h2 className="text-2xl font-serif text-yellow-500">Package Details</h2>
-              <button onClick={() => setViewPkg(null)} className="text-gray-400 hover:text-white text-xl">✕</button>
-            </div>
-            <div className="space-y-4">
-              <div><span className="text-gray-400 text-sm">Name</span><p className="text-white font-semibold">{viewPkg.title}</p></div>
-              <div><span className="text-gray-400 text-sm">Type</span><p className="text-white">{viewPkg.type}</p></div>
-              <div><span className="text-gray-400 text-sm">Description</span><p className="text-white">{viewPkg.description}</p></div>
-              <div><span className="text-gray-400 text-sm">Base Price</span><p className="text-yellow-400 font-bold text-lg">LKR {viewPkg.basePrice.toLocaleString()}</p></div>
-              <div><span className="text-gray-400 text-sm">Duration</span><p className="text-white">{viewPkg.durationHours} hours</p></div>
-              <div><span className="text-gray-400 text-sm">Status</span><p className={viewPkg.active ? "text-green-400" : "text-gray-400"}>{viewPkg.active ? "Active" : "Inactive"}</p></div>
-            </div>
-            <Button className="w-full mt-6 bg-red-700 hover:bg-red-800 text-white" onClick={() => setViewPkg(null)}>Close</Button>
-          </div>
-        </div>
-      )}
-
-      {/* Edit Modal */}
-      {editPkg && (
-        <div className="fixed inset-0 bg-black/70 flex items-center justify-center z-50">
-          <div className="bg-gray-900 border border-gray-700 rounded-xl p-8 w-full max-w-md">
-            <div className="flex justify-between items-center mb-6">
-              <h2 className="text-2xl font-serif text-yellow-500">Edit Package</h2>
-              <button onClick={() => setEditPkg(null)} className="text-gray-400 hover:text-white text-xl">✕</button>
-            </div>
-            <div className="space-y-4">
-              <div>
-                <label className="text-gray-400 text-sm">Package Name</label>
-                <input className="w-full bg-gray-800 border border-gray-700 text-white rounded-lg p-2 mt-1" value={editForm.title || ''} onChange={e => setEditForm({ ...editForm, title: e.target.value })} />
-              </div>
-              <div>
-                <label className="text-gray-400 text-sm">Type</label>
-                <input className="w-full bg-gray-800 border border-gray-700 text-white rounded-lg p-2 mt-1" value={editForm.type || ''} onChange={e => setEditForm({ ...editForm, type: e.target.value })} />
-              </div>
-              <div>
-                <label className="text-gray-400 text-sm">Description</label>
-                <textarea className="w-full bg-gray-800 border border-gray-700 text-white rounded-lg p-2 mt-1" rows={3} value={editForm.description || ''} onChange={e => setEditForm({ ...editForm, description: e.target.value })} />
-              </div>
-              <div>
-                <label className="text-gray-400 text-sm">Base Price (LKR)</label>
-                <input type="number" className="w-full bg-gray-800 border border-gray-700 text-white rounded-lg p-2 mt-1" value={editForm.basePrice || ''} onChange={e => setEditForm({ ...editForm, basePrice: Number(e.target.value) })} />
-              </div>
-              <div>
-                <label className="text-gray-400 text-sm">Duration (hours)</label>
-                <input type="number" className="w-full bg-gray-800 border border-gray-700 text-white rounded-lg p-2 mt-1" value={editForm.durationHours || ''} onChange={e => setEditForm({ ...editForm, durationHours: Number(e.target.value) })} />
-              </div>
-            </div>
-            <div className="flex gap-3 mt-6">
-              <Button variant="outline" className="flex-1 border-gray-700 text-gray-300 hover:bg-gray-800" onClick={() => setEditPkg(null)}>Cancel</Button>
-              <Button className="flex-1 bg-red-700 hover:bg-red-800 text-white" onClick={handleEditSave}>Save Changes</Button>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* New Package Modal */}
-      {showNewForm && (
-        <div className="fixed inset-0 bg-black/70 flex items-center justify-center z-50">
-          <div className="bg-gray-900 border border-gray-700 rounded-xl p-8 w-full max-w-md">
-            <div className="flex justify-between items-center mb-6">
-              <h2 className="text-2xl font-serif text-yellow-500">New Package</h2>
-              <button onClick={() => setShowNewForm(false)} className="text-gray-400 hover:text-white text-xl">✕</button>
-            </div>
-            <div className="space-y-4">
-              <div>
-                <label className="text-gray-400 text-sm">Package Name *</label>
-                <input className="w-full bg-gray-800 border border-gray-700 text-white rounded-lg p-2 mt-1" placeholder="e.g. Wedding Silver" value={newForm.title} onChange={e => setNewForm({ ...newForm, title: e.target.value })} />
-              </div>
-              <div>
-                <label className="text-gray-400 text-sm">Type</label>
-                <select className="w-full bg-gray-800 border border-gray-700 text-white rounded-lg p-2 mt-1" value={newForm.type} onChange={e => setNewForm({ ...newForm, type: e.target.value })}>
-                  <option value="Wedding">Wedding</option>
-                  <option value="Event">Event</option>
-                  <option value="Studio">Studio</option>
-                  <option value="Outdoor">Outdoor</option>
-                </select>
-              </div>
-              <div>
-                <label className="text-gray-400 text-sm">Description</label>
-                <textarea className="w-full bg-gray-800 border border-gray-700 text-white rounded-lg p-2 mt-1" rows={3} placeholder="Package description..." value={newForm.description} onChange={e => setNewForm({ ...newForm, description: e.target.value })} />
-              </div>
-              <div>
-                <label className="text-gray-400 text-sm">Base Price (LKR) *</label>
-                <input type="number" className="w-full bg-gray-800 border border-gray-700 text-white rounded-lg p-2 mt-1" placeholder="e.g. 50000" value={newForm.basePrice} onChange={e => setNewForm({ ...newForm, basePrice: e.target.value })} />
-              </div>
-              <div>
-                <label className="text-gray-400 text-sm">Duration (hours) *</label>
-                <input type="number" className="w-full bg-gray-800 border border-gray-700 text-white rounded-lg p-2 mt-1" placeholder="e.g. 4" value={newForm.durationHours} onChange={e => setNewForm({ ...newForm, durationHours: e.target.value })} />
-              </div>
-            </div>
-            <div className="flex gap-3 mt-6">
-              <Button variant="outline" className="flex-1 border-gray-700 text-gray-300 hover:bg-gray-800" onClick={() => setShowNewForm(false)}>Cancel</Button>
-              <Button className="flex-1 bg-red-700 hover:bg-red-800 text-white" onClick={handleNewSave}>Add Package</Button>
-            </div>
-          </div>
         </div>
       )}
     </div>

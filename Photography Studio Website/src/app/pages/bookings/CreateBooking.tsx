@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router';
 import { ArrowLeft, Check, Search, Calendar, Clock, FileText } from 'lucide-react';
 import { Button } from '../../components/ui/button';
@@ -7,6 +7,7 @@ import { Label } from '../../components/ui/label';
 import { Textarea } from '../../components/ui/textarea';
 import { Card } from '../../components/ui/card';
 import { Badge } from '../../components/ui/badge';
+import { bookingsAPI, clientsAPI } from '../../../services/api';
 import { motion } from 'motion/react';
 import { toast } from 'sonner';
 import { format, addDays, startOfMonth, endOfMonth, eachDayOfInterval, isSameDay } from 'date-fns';
@@ -69,6 +70,27 @@ export default function CreateBooking() {
   const navigate = useNavigate();
   const [step, setStep] = useState(1);
   const [loading, setLoading] = useState(false);
+  const [clients, setClients] = useState<any[]>([]);
+
+  useEffect(() => {
+    const loadClients = async () => {
+      try {
+        const response = await clientsAPI.getAll();
+        if (response.success && Array.isArray(response.data)) {
+          setClients(response.data);
+        } else {
+          setClients(mockClients);
+          toast.error(response.message || 'Failed to load clients, using fallback data');
+        }
+      } catch (error) {
+        console.error('Error fetching clients:', error);
+        setClients(mockClients);
+        toast.error('Unable to load clients; use manual entry');
+      }
+    };
+    loadClients();
+  }, []);
+
   
   // Form data
   const [selectedClient, setSelectedClient] = useState<any>(null);
@@ -83,11 +105,16 @@ export default function CreateBooking() {
   
   const [notes, setNotes] = useState('');
   
-  const filteredClients = mockClients.filter(client =>
-    client.name.toLowerCase().includes(clientSearch.toLowerCase()) ||
-    client.email.toLowerCase().includes(clientSearch.toLowerCase()) ||
-    client.phone.includes(clientSearch)
-  );
+  const filteredClients = (clients.length > 0 ? clients : mockClients).filter((client) => {
+    const name = (client.name || `${client.first_name || ''} ${client.last_name || ''}`).toString().toLowerCase();
+    const email = (client.email || '').toString().toLowerCase();
+    const phone = (client.phone || '').toString();
+    return (
+      name.includes(clientSearch.toLowerCase()) ||
+      email.includes(clientSearch.toLowerCase()) ||
+      phone.includes(clientSearch)
+    );
+  });
   
   const handleNext = () => {
     if (step === 1 && !selectedClient && !createNewClient) {
@@ -113,26 +140,76 @@ export default function CreateBooking() {
     if (step > 1) setStep(step - 1);
   };
   
-  const handleSubmit = () => {
+  const handleSubmit = async () => {
+    if (!selectedPackage || !selectedDate || !selectedTime) {
+      toast.error('Please complete package selection, date, and time before submitting.');
+      return;
+    }
+
     setLoading(true);
-    setTimeout(() => {
-      const newBooking = {
-        id: `BK-${Date.now()}`,
-        clientName: selectedClient?.name || 'Unknown',
-        clientId: selectedClient?.id || '',
-        packageName: selectedPackage?.title || selectedPackage?.name || '',
-        packageType: selectedPackage?.type || '',
-        scheduledDate: selectedDate,
-        scheduledTime: selectedTime || '09:00 - 17:00',
-        photographer: '',
-        status: 'Pending',
+
+    try {
+      let clientId: number | null = null;
+
+      if (createNewClient) {
+        if (!newClient.name || !newClient.email || !newClient.phone) {
+          toast.error('New client details are incomplete.');
+          return;
+        }
+
+        const [firstName, ...restName] = newClient.name.trim().split(' ');
+        const lastName = restName.join(' ') || ' '; // ensure not empty
+
+        const clientCreateResponse = await clientsAPI.create({
+          firstName,
+          lastName,
+          email: newClient.email,
+          phone: newClient.phone,
+          status: 'active',
+        });
+
+        if (!clientCreateResponse.success) {
+          throw new Error(clientCreateResponse.message || 'Failed to create client');
+        }
+
+        clientId = clientCreateResponse.data?.id;
+      } else {
+        const idValue = selectedClient?.id;
+        clientId = Number(idValue);
+
+        if (!clientId || Number.isNaN(clientId)) {
+          toast.error('Please select a valid client.');
+          return;
+        }
+      }
+
+      const bookingsPayload = {
+        clientId,
+        serviceType: selectedPackage?.title || selectedPackage?.type || 'Unknown',
+        bookingDate: new Date().toISOString().split('T')[0],
+        eventDate: selectedDate ? format(selectedDate, 'yyyy-MM-dd') : null,
+        eventTime: selectedTime,
+        duration: selectedPackage?.durationHours || null,
+        location: 'Studio',
+        amount: selectedPackage?.basePrice || 0,
+        notes: notes || null,
+        assignedEmployees: [],
       };
-      const existing = JSON.parse(localStorage.getItem('bookings') || '[]');
-      localStorage.setItem('bookings', JSON.stringify([...existing, newBooking]));
-      toast.success('Booking created successfully!');
-      navigate('/admin/bookings');
+
+      const response = await bookingsAPI.create(bookingsPayload);
+
+      if (response.success) {
+        toast.success('Booking created successfully!');
+        navigate('/admin/bookings');
+      } else {
+        toast.error(response.message || 'Failed to create booking');
+      }
+    } catch (error) {
+      console.error('Booking submit error:', error);
+      toast.error('Unable to create booking. Try again later.');
+    } finally {
       setLoading(false);
-    }, 1000);
+    }
   };
   
   const currentMonth = new Date();
@@ -218,8 +295,12 @@ export default function CreateBooking() {
                         >
                           <div className="flex items-center justify-between">
                             <div>
-                              <div className="font-semibold text-white">{client.name}</div>
-                              <div className="text-sm text-gray-400">{client.email} • {client.phone}</div>
+                              <div className="font-semibold text-white">
+                                {client.name || `${client.first_name || ''} ${client.last_name || ''}`.trim() || 'Unnamed client'}
+                              </div>
+                              <div className="text-sm text-gray-400">
+                                {(client.email || 'No email')} • {(client.phone || 'No phone')}
+                              </div>
                               <div className="text-xs text-gray-500 mt-1">{client.id}</div>
                             </div>
                             {selectedClient?.id === client.id && (
@@ -280,7 +361,7 @@ export default function CreateBooking() {
                       <Button
                         onClick={() => {
                           setCreateNewClient(false);
-                          setSelectedClient({ id: 'NEW', ...newClient });
+                          setSelectedClient(null);
                         }}
                         variant="outline"
                         className="border-gray-700 text-gray-300 hover:bg-gray-800"
@@ -505,7 +586,9 @@ export default function CreateBooking() {
                   <div className="grid md:grid-cols-2 gap-4 text-sm">
                     <div>
                       <div className="text-gray-500">Name</div>
-                      <div className="text-white font-medium">{selectedClient?.name || newClient.name}</div>
+                      <div className="text-white font-medium">
+                        {selectedClient?.name || `${selectedClient?.first_name || ''} ${selectedClient?.last_name || ''}`.trim() || newClient.name}
+                      </div>
                     </div>
                     <div>
                       <div className="text-gray-500">Email</div>
@@ -602,4 +685,3 @@ export default function CreateBooking() {
     </div>
   );
 }
-

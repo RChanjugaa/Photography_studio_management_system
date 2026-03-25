@@ -11,6 +11,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '.
 import { toast } from 'sonner';
 import { motion, AnimatePresence } from 'motion/react';
 import AdminNavigation from '../../components/AdminNavigation';
+import { eventsAPI } from '../../../services/api';
 
 // Mock events data
 const mockEvents = [
@@ -93,7 +94,8 @@ const eventCategories = [
 
 export default function AdminEventManagement() {
   const navigate = useNavigate();
-  const [events, setEvents] = useState(mockEvents);
+  const [events, setEvents] = useState<any[]>([]);
+  const [loadingEvents, setLoadingEvents] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   const [typeFilter, setTypeFilter] = useState('all');
   const [statusFilter, setStatusFilter] = useState('all');
@@ -103,14 +105,47 @@ export default function AdminEventManagement() {
   const [isEditing, setIsEditing] = useState(false);
   const [selectedPhotos, setSelectedPhotos] = useState<number[]>([]);
   
-  // Check admin authentication
+  // Check admin authentication + load events
   useEffect(() => {
     const userRole = localStorage.getItem('userRole');
     if (userRole !== 'admin') {
       toast.error('Access denied. Admin login required.');
       navigate('/admin/login');
+      return;
     }
+    fetchEvents();
   }, [navigate]);
+
+  const fetchEvents = async () => {
+    setLoadingEvents(true);
+    try {
+      const response = await eventsAPI.getAll();
+      if (response.success && Array.isArray(response.data)) {
+        const normalized = response.data.map((event: any) => ({
+          id: event.id,
+          name: event.event_name || event.name,
+          type: event.event_type || event.type,
+          date: event.event_date || event.date,
+          time: event.event_time || event.time,
+          location: event.location,
+          bookingId: event.booking_id || event.bookingId || 'N/A',
+          photographerId: event.assigned_employees?.[0] || event.photographerId || null,
+          photographerName: event.photographer_name || event.photographerName || 'Unassigned',
+          status: event.status || 'upcoming',
+          notes: event.description || event.notes || '',
+          assigned_employees: event.assigned_employees || [],
+        }));
+        setEvents(normalized);
+      } else {
+        toast.error(response.message || 'Failed to load events');
+      }
+    } catch (error) {
+      console.error('Failed to fetch events:', error);
+      toast.error('Error connecting to server');
+    } finally {
+      setLoadingEvents(false);
+    }
+  };
   
   // Event form state
   const [eventForm, setEventForm] = useState({
@@ -169,31 +204,53 @@ export default function AdminEventManagement() {
     setShowEventDrawer(true);
   };
   
-  const handleSaveEvent = () => {
+  const handleSaveEvent = async () => {
     if (!eventForm.name || !eventForm.date || !eventForm.type) {
       toast.error('Please fill in all required fields');
       return;
     }
-    
-    if (isEditing) {
-      setEvents(events.map(evt =>
-        evt.id === currentEvent.id
-          ? { ...evt, ...eventForm, photographerId: parseInt(eventForm.photographerId) }
-          : evt
-      ));
-      toast.success('Event updated successfully');
-    } else {
-      const newEvent = {
-        id: events.length + 1,
-        ...eventForm,
-        photographerId: parseInt(eventForm.photographerId),
-        photos: []
-      };
-      setEvents([...events, newEvent]);
-      toast.success('Event created successfully');
+
+    const payload = {
+      eventType: eventForm.type,
+      eventName: eventForm.name,
+      description: eventForm.notes,
+      eventDate: eventForm.date,
+      eventTime: eventForm.time,
+      location: eventForm.location,
+      clientId: null,
+      assignedEmployees: eventForm.photographerId ? [parseInt(eventForm.photographerId)] : [],
+      budget: null,
+      status: eventForm.status,
+    };
+
+    try {
+      if (isEditing && currentEvent?.id) {
+        const response = await eventsAPI.update(currentEvent.id, payload);
+        if (response.success) {
+          setEvents(events.map((evt) => (evt.id === currentEvent.id ? { ...evt, ...eventForm } : evt)));
+          toast.success('Event updated successfully');
+        } else {
+          toast.error(response.message || 'Failed to update event');
+        }
+      } else {
+        const response = await eventsAPI.create(payload);
+        if (response.success) {
+          const createdEvent = {
+            id: response.data?.id || Math.max(0, ...events.map((e) => Number(e.id))) + 1,
+            ...eventForm,
+            assigned_employees: payload.assignedEmployees,
+          };
+          setEvents([...events, createdEvent]);
+          toast.success('Event created successfully');
+        } else {
+          toast.error(response.message || 'Failed to create event');
+        }
+      }
+      setShowEventDrawer(false);
+    } catch (error) {
+      console.error('Event save failed:', error);
+      toast.error('Error saving event');
     }
-    
-    setShowEventDrawer(false);
   };
   
   const handleViewDetails = (event: any) => {
@@ -202,10 +259,19 @@ export default function AdminEventManagement() {
     setSelectedPhotos([]);
   };
   
-  const handleDeleteEvent = (id: number) => {
-    if (confirm('Are you sure you want to delete this event?')) {
-      setEvents(events.filter(evt => evt.id !== id));
-      toast.success('Event deleted successfully');
+  const handleDeleteEvent = async (id: number) => {
+    if (!confirm('Are you sure you want to delete this event?')) return;
+    try {
+      const response = await eventsAPI.delete(id);
+      if (response.success) {
+        setEvents(events.filter((evt) => evt.id !== id));
+        toast.success('Event deleted successfully');
+      } else {
+        toast.error(response.message || 'Failed to delete event');
+      }
+    } catch (error) {
+      console.error('Failed to delete event:', error);
+      toast.error('Error deleting event');
     }
   };
   

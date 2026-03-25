@@ -28,6 +28,7 @@ import EventsGallery from "./pages/public/EventsGallery";
 import PublicEventDetail from "./pages/public/PublicEventDetail";
 import StaffSelfService from "./pages/staff/StaffSelfService";
 import StaffLogin from "./pages/staff/StaffLogin";
+import AdminClients from "./pages/admin/AdminClients";
 import AdminEmployees from "./pages/admin/AdminEmployees";
 import AdminLogin from "./pages/admin/AdminLogin";
 import AdminDashboard from "./pages/admin/AdminDashboard";
@@ -77,6 +78,7 @@ const router = createBrowserRouter([
       
       // Admin routes
       { path: "admin/employees", element: <AdminEmployees /> },
+      { path: "admin/clients", element: <AdminClients /> },
       { path: "admin/login", element: <AdminLogin /> },
       { path: "admin/dashboard", element: <AdminDashboard /> },
       { path: "admin/events", element: <AdminEventManagement /> },

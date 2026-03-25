@@ -11,6 +11,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '.
 import { toast } from 'sonner';
 import { motion, AnimatePresence } from 'motion/react';
 import AdminNavigation from '../../components/AdminNavigation';
+import { employeesAPI } from '../../../services/api';
 
 // Mock employee data
 const mockEmployees = [
@@ -48,7 +49,8 @@ const mockEmployees = [
 
 export default function AdminEmployees() {
   const navigate = useNavigate();
-  const [employees, setEmployees] = useState(mockEmployees);
+  const [employees, setEmployees] = useState<any[]>([]);
+  const [loadingEmployees, setLoadingEmployees] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   const [roleFilter, setRoleFilter] = useState('all');
   const [statusFilter, setStatusFilter] = useState('all');
@@ -58,14 +60,48 @@ export default function AdminEmployees() {
   const [currentEmployee, setCurrentEmployee] = useState<any>(null);
   const [isEditing, setIsEditing] = useState(false);
   
-  // Check admin authentication
+  // Check admin authentication + load employees
   useEffect(() => {
     const userRole = localStorage.getItem('userRole');
     if (userRole !== 'admin') {
       toast.error('Access denied. Admin login required.');
       navigate('/admin/login');
+      return;
     }
+    fetchEmployees();
   }, [navigate]);
+
+  const fetchEmployees = async () => {
+    setLoadingEmployees(true);
+    try {
+      const response = await employeesAPI.getAll();
+      if (response.success && Array.isArray(response.data)) {
+        const normalized = response.data.map((emp: any) => ({
+          id: emp.id,
+          firstName: emp.first_name || emp.firstName,
+          lastName: emp.last_name || emp.lastName,
+          email: emp.email,
+          phone: emp.phone,
+          role: emp.role,
+          status: emp.status,
+          visiblePublic: emp.visible_public === 1 || emp.visible_public === true,
+          joinDate: emp.join_date || emp.joinDate,
+          lastLogin: emp.last_login || emp.lastLogin || '-',
+          bio: emp.bio || '',
+          specialties: emp.specialties ? (typeof emp.specialties === 'string' ? JSON.parse(emp.specialties) : emp.specialties) : [],
+          baseSalary: emp.base_salary || emp.baseSalary || 0,
+        }));
+        setEmployees(normalized);
+      } else {
+        toast.error(response.message || 'Failed to load employees');
+      }
+    } catch (error) {
+      console.error('Error fetching employees:', error);
+      toast.error('Could not connect to server');
+    } finally {
+      setLoadingEmployees(false);
+    }
+  };
   
   // Employee form state
   const [employeeForm, setEmployeeForm] = useState({
@@ -146,41 +182,97 @@ export default function AdminEmployees() {
     setShowEmployeeDrawer(true);
   };
   
-  const handleSaveEmployee = () => {
+  const handleSaveEmployee = async () => {
     if (!employeeForm.firstName || !employeeForm.lastName || !employeeForm.email || !employeeForm.role) {
       toast.error('Please fill in all required fields');
       return;
     }
-    
-    if (isEditing) {
-      setEmployees(employees.map(emp =>
-        emp.id === currentEmployee.id
-          ? { ...emp, ...employeeForm, specialties: employeeForm.specialties.split(',').map(s => s.trim()) }
-          : emp
-      ));
-      toast.success('Employee updated successfully');
-    } else {
-      const newEmployee = {
-        id: employees.length + 1,
-        ...employeeForm,
-        specialties: employeeForm.specialties.split(',').map(s => s.trim()),
-        lastLogin: '-',
-        baseSalary: 0
-      };
-      setEmployees([...employees, newEmployee]);
-      toast.success('Employee added successfully');
+
+    const payload = {
+      firstName: employeeForm.firstName,
+      lastName: employeeForm.lastName,
+      email: employeeForm.email,
+      phone: employeeForm.phone,
+      role: employeeForm.role,
+      status: employeeForm.status,
+      visiblePublic: employeeForm.visiblePublic,
+      joinDate: employeeForm.joinDate,
+      bio: employeeForm.bio,
+      specialties: employeeForm.specialties.split(',').map((s) => s.trim()),
+      baseSalary: employeeForm.baseSalary || 0,
+    };
+
+    try {
+      if (isEditing && currentEmployee?.id) {
+        const response = await employeesAPI.update(currentEmployee.id, payload);
+        if (response.success) {
+          setEmployees(employees.map((emp) =>
+            emp.id === currentEmployee.id ? { ...emp, ...payload, specialties: payload.specialties } : emp
+          ));
+          toast.success('Employee updated successfully');
+        } else {
+          toast.error(response.message || 'Failed to update employee');
+        }
+      } else {
+        const response = await employeesAPI.create(payload);
+        if (response.success) {
+          const newEmployee = {
+            id: response.data?.id || (Math.max(0, ...employees.map((e) => Number(e.id))) + 1),
+            ...payload,
+            lastLogin: '-',
+          };
+          setEmployees([...employees, newEmployee]);
+          toast.success('Employee added successfully');
+        } else {
+          toast.error(response.message || 'Failed to create employee');
+        }
+      }
+    } catch (error) {
+      console.error('Error saving employee:', error);
+      toast.error('Unable to save employee');
+    } finally {
+      setShowEmployeeDrawer(false);
     }
-    
-    setShowEmployeeDrawer(false);
   };
   
-  const handleToggleVisibility = (id: number) => {
-    setEmployees(employees.map(emp =>
-      emp.id === id ? { ...emp, visiblePublic: !emp.visiblePublic } : emp
-    ));
-    toast.success('Visibility updated');
+  const handleToggleVisibility = async (id: number) => {
+    const target = employees.find((emp) => emp.id === id);
+    if (!target) return;
+
+    try {
+      const payload = { ...target, visiblePublic: !target.visiblePublic };
+      const response = await employeesAPI.update(id, payload);
+      if (response.success) {
+        setEmployees(employees.map((emp) =>
+          emp.id === id ? { ...emp, visiblePublic: !target.visiblePublic } : emp
+        ));
+        toast.success('Visibility updated');
+      } else {
+        toast.error(response.message || 'Failed to update visibility');
+      }
+    } catch (error) {
+      console.error('Failed to toggle visibility:', error);
+      toast.error('Error updating visibility');
+    }
   };
-  
+
+  const handleDeleteEmployee = async (id: number) => {
+    if (!confirm('Are you sure you want to delete this employee?')) return;
+
+    try {
+      const response = await employeesAPI.delete(id);
+      if (response.success) {
+        setEmployees(employees.filter((emp) => emp.id !== id));
+        toast.success('Employee deleted successfully');
+      } else {
+        toast.error(response.message || 'Failed to delete employee');
+      }
+    } catch (error) {
+      console.error('Failed to delete employee:', error);
+      toast.error('Error deleting employee');
+    }
+  };
+
   const handleManageSalary = (employee: any) => {
     setCurrentEmployee(employee);
     setSalaryForm({
@@ -193,12 +285,30 @@ export default function AdminEmployees() {
     setShowSalaryDrawer(true);
   };
   
-  const handleSaveSalary = () => {
-    setEmployees(employees.map(emp =>
-      emp.id === currentEmployee.id ? { ...emp, baseSalary: salaryForm.baseSalary } : emp
-    ));
-    toast.success('Salary updated successfully');
-    setShowSalaryDrawer(false);
+  const handleSaveSalary = async () => {
+    if (!currentEmployee) return;
+
+    const payload = {
+      ...currentEmployee,
+      baseSalary: salaryForm.baseSalary
+    };
+
+    try {
+      const response = await employeesAPI.update(currentEmployee.id, payload);
+      if (response.success) {
+        setEmployees(employees.map((emp) =>
+          emp.id === currentEmployee.id ? { ...emp, baseSalary: salaryForm.baseSalary } : emp
+        ));
+        toast.success('Salary updated successfully');
+      } else {
+        toast.error(response.message || 'Failed to update salary');
+      }
+    } catch (error) {
+      console.error('Failed to update salary:', error);
+      toast.error('Error updating salary');
+    } finally {
+      setShowSalaryDrawer(false);
+    }
   };
   
   const handleAssignTask = (employee: any) => {
@@ -362,6 +472,14 @@ export default function AdminEmployees() {
                             className="border-gray-700 text-gray-300 hover:bg-gray-800"
                           >
                             <Calendar className="size-4" />
+                          </Button>
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => handleDeleteEmployee(employee.id)}
+                            className="border-red-500 text-red-300 hover:bg-red-800"
+                          >
+                            <Trash2 className="size-4" />
                           </Button>
                         </div>
                       </td>

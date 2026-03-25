@@ -174,28 +174,59 @@ export default function AdminPayments() {
     setShowPaymentDrawer(true);
   };
   
-  const handleSavePayment = () => {
-    if (!paymentForm.clientName || !paymentForm.bookingId || !paymentForm.amount) {
-      toast.error('Please fill in all required fields');
-      return;
+  const handleSavePayment = async () => {
+  if (!paymentForm.clientName || !paymentForm.bookingId || !paymentForm.amount) {
+    toast.error('Please fill in all required fields');
+    return;
+  }
+
+  if (parseFloat(paymentForm.amount) <= 0) {
+    toast.error('Amount must be greater than 0');
+    return;
+  }
+
+  try {
+    const response = await fetch("http://localhost:5000/api/payments", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify({
+       bookingId: parseInt(paymentForm.bookingId.replace(/\D/g, '')) || 1,
+        clientId: 1, // TEMP (you can change later)
+        amount: parseFloat(paymentForm.amount),
+        paymentMethod: paymentForm.method,
+        dueDate: paymentForm.date,
+        notes: paymentForm.notes
+      })
+    });
+
+    const data = await response.json();
+
+    console.log("API RESPONSE:", data);
+
+    if (data.success) {
+      // ✅ Update UI
+      const newPayment = {
+        id: payments.length + 1,
+        ...paymentForm,
+        amount: parseFloat(paymentForm.amount),
+        status: 'completed'
+      };
+
+      setPayments([newPayment, ...payments]);
+
+      toast.success("Payment saved to DB ✅");
+      setShowPaymentDrawer(false);
+    } else {
+      toast.error("Failed to save payment ❌");
     }
-    
-    if (parseFloat(paymentForm.amount) <= 0) {
-      toast.error('Amount must be greater than 0');
-      return;
-    }
-    
-    const newPayment = {
-      id: payments.length + 1,
-      ...paymentForm,
-      amount: parseFloat(paymentForm.amount),
-      status: 'completed'
-    };
-    
-    setPayments([newPayment, ...payments]);
-    toast.success('Payment recorded successfully');
-    setShowPaymentDrawer(false);
-  };
+
+  } catch (error) {
+    console.error("ERROR:", error);
+    toast.error("Server error ❌");
+  }
+};
   
   const getStatusBadgeClass = (status: string) => {
     switch (status) {

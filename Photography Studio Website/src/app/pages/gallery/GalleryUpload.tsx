@@ -8,6 +8,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '.
 import { Progress } from '../../components/ui/progress';
 import { toast } from 'sonner';
 import { motion } from 'motion/react';
+import { galleryAPI } from '../../../services/api';
 
 const cropPresets = [
   { id: 'square', name: 'Square (1080×1080)', width: 1080, height: 1080, recommended: true },
@@ -80,31 +81,63 @@ export default function GalleryUpload() {
       toast.error('Please select photos to upload');
       return;
     }
+
+    if (!bookingId) {
+      toast.error('Booking ID is required');
+      return;
+    }
     
     setIsUploading(true);
     setUploadProgress(0);
     
-    // Simulate upload progress
-    const interval = setInterval(() => {
-      setUploadProgress(prev => {
-        if (prev >= 100) {
-          clearInterval(interval);
-          return 100;
-        }
-        return prev + 10;
+    try {
+      // Convert files to base64 for storage (in production, use multipart/form-data)
+      const imagePromises = selectedFiles.map(file => {
+        return new Promise<string>((resolve, reject) => {
+          const reader = new FileReader();
+          reader.onload = (e) => {
+            const base64 = e.target?.result as string;
+            resolve(base64);
+          };
+          reader.onerror = () => reject(new Error(`Failed to read file: ${file.name}`));
+          reader.readAsDataURL(file);
+        });
       });
-    }, 300);
-    
-    // Simulate upload
-    setTimeout(() => {
-      clearInterval(interval);
-      setUploadProgress(100);
-      toast.success(`Upload complete — ${selectedFiles.length} photos added to gallery`);
+
+      const base64Images = await Promise.all(imagePromises);
       
-      setTimeout(() => {
-        navigate(`/gallery/${bookingId}`);
-      }, 1000);
-    }, 3500);
+      // Prepare images array for bulk upload
+      const images = base64Images.map((imageUrl, index) => ({
+        imageUrl,
+        imageType: 'photo'
+      }));
+
+      // Update progress
+      setUploadProgress(50);
+
+      // Call API to save to database
+      const response = await galleryAPI.bulkUpload(parseInt(bookingId), images);
+
+      if (response.success) {
+        setUploadProgress(100);
+        toast.success(`✓ ${selectedFiles.length} photos uploaded and saved to database`);
+        
+        // Reset form
+        setSelectedFiles([]);
+        setUploadProgress(0);
+        
+        setTimeout(() => {
+          navigate(`/gallery/${bookingId}`);
+        }, 1000);
+      } else {
+        toast.error(response.message || 'Failed to upload photos');
+      }
+    } catch (error) {
+      console.error('Upload error:', error);
+      toast.error(error instanceof Error ? error.message : 'Failed to upload photos');
+    } finally {
+      setIsUploading(false);
+    }
   };
   
   const preset = cropPresets.find(p => p.id === cropPreset);
