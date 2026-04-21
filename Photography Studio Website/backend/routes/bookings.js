@@ -200,4 +200,25 @@ router.get('/stats/overview', async (req, res) => {
   }
 });
 
+
+// Get booked time slots for a specific date
+router.get('/booked-slots/:date', async (req, res) => {
+  try {
+    const { date } = req.params;
+    const connection = await getDBPool().getConnection();
+    const [rows] = await connection.execute(
+      `SELECT event_time FROM bookings 
+       WHERE event_date = ? 
+       AND status NOT IN ('cancelled')`,
+      [date]
+    );
+    connection.release();
+    const bookedTimes = rows.map((r) => r.event_time);
+    res.json({ success: true, data: bookedTimes });
+  } catch (err) {
+    res.status(500).json({ success: false, message: err.message });
+  }
+});
+
+
 module.exports = router;
