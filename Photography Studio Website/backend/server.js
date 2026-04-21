@@ -39,6 +39,8 @@ app.use('/api/events', require('./routes/events'));
 app.use('/api/payments', require('./routes/payments'));
 app.use('/api/gallery', require('./routes/gallery'));
 app.use('/api/feedback', require('./routes/feedback'));
+app.use('/api/packages', require('./routes/packages'));
+
 
 // Database initialization and server start
 const initializeDatabase = async () => {
@@ -231,7 +233,24 @@ const createTables = async () => {
         FOREIGN KEY (client_id) REFERENCES clients(id) ON DELETE CASCADE,
         INDEX idx_booking_id (booking_id)
       )
+        
     `);
+
+    // Packages table
+await connection.execute(`
+  CREATE TABLE IF NOT EXISTS packages (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    title VARCHAR(100) NOT NULL,
+    type VARCHAR(50) NOT NULL,
+    description TEXT,
+    base_price DECIMAL(10,2) NOT NULL,
+    duration_hours INT,
+    features JSON,
+    active BOOLEAN DEFAULT true,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+  )
+`);
 
     console.log('✓ All database tables created/verified successfully');
   } catch (err) {
