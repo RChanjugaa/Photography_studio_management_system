@@ -7,11 +7,11 @@ import { Label } from '../../components/ui/label';
 import { Textarea } from '../../components/ui/textarea';
 import { Card } from '../../components/ui/card';
 import { Badge } from '../../components/ui/badge';
-import { bookingsAPI, clientsAPI } from '../../../services/api';
 import { motion } from 'motion/react';
 import { toast } from 'sonner';
 import { Printer } from 'lucide-react';
 import { format, addDays, startOfMonth, endOfMonth, eachDayOfInterval, isSameDay } from 'date-fns';
+import { bookingsAPI, clientsAPI, packagesAPI } from '../../../services/api';
 
 // Mock data
 const mockClients = [
@@ -65,13 +65,15 @@ const timeSlots = [
 ];
 
 // Mock booked slots
-const bookedSlots = ['10:00 AM', '01:00 PM', '04:00 PM'];
 
 export default function CreateBooking() {
   const navigate = useNavigate();
   const [step, setStep] = useState(1);
   const [loading, setLoading] = useState(false);
+  const [bookedSlots, setBookedSlots] = useState<string[]>([]);
+  const [loadingSlots, setLoadingSlots] = useState(false);
   const [clients, setClients] = useState<any[]>([]);
+  const [dbPackages, setDbPackages] = useState<any[]>([]);
 
   useEffect(() => {
     const loadClients = async () => {
@@ -90,9 +92,30 @@ export default function CreateBooking() {
       }
     };
     loadClients();
+
+    const loadPackages = async () => {
+  try {
+    const response = await packagesAPI.getActive();
+    if (response.success && response.data.length > 0) {
+      setDbPackages(response.data.map((p: any) => ({
+        id: p.id.toString(),
+        type: p.type,
+        title: p.title,
+        basePrice: parseFloat(p.base_price),
+        durationHours: p.duration_hours || 0,
+        description: p.description || '',
+        active: p.active,
+      })));
+    }
+  } catch (err) {
+    console.error('Failed to load packages');
+  }
+};
+loadPackages();
   }, []);
 
-  
+
+
   // Form data
   const [selectedClient, setSelectedClient] = useState<any>(null);
   const [clientSearch, setClientSearch] = useState('');
@@ -103,6 +126,33 @@ export default function CreateBooking() {
   
   const [selectedDate, setSelectedDate] = useState<Date | null>(null);
   const [selectedTime, setSelectedTime] = useState('');
+
+ 
+useEffect(() => {
+  if (!selectedDate) return;
+  const fetchBookedSlots = async () => {
+    setLoadingSlots(true);
+    try {
+      const dateStr = format(selectedDate, 'yyyy-MM-dd');
+      const response = await bookingsAPI.getBookedSlots(dateStr);
+      if (response.success) {
+        const converted = response.data.map((t: string) => {
+          const [h, m] = t.split(':');
+          const hour = parseInt(h);
+          const ampm = hour >= 12 ? 'PM' : 'AM';
+          const displayHour = hour > 12 ? hour - 12 : hour === 0 ? 12 : hour;
+          return `${String(displayHour).padStart(2, '0')}:${m} ${ampm}`;
+        });
+        setBookedSlots(converted);
+      }
+    } catch (err) {
+      console.error('Failed to fetch booked slots');
+    } finally {
+      setLoadingSlots(false);
+    }
+  };
+  fetchBookedSlots();
+}, [selectedDate]);
   
   const [notes, setNotes] = useState('');
   
@@ -680,8 +730,7 @@ export default function CreateBooking() {
               </div>
               
               <div className="grid md:grid-cols-2 gap-6 mb-8">
-                {mockPackages.map((pkg) => (
-                  <div
+              {(dbPackages.length > 0 ? dbPackages : mockPackages).map((pkg) => (                  <div
                     key={pkg.id}
                     onClick={() => setSelectedPackage(pkg)}
                     className={`p-6 border-2 rounded-lg cursor-pointer transition-all ${
@@ -797,9 +846,10 @@ export default function CreateBooking() {
                 
                 {/* Time Slots */}
                 <div>
-                  <h3 className="text-lg font-semibold text-white mb-4 flex items-center gap-2">
+                 <h3 className="text-lg font-semibold text-white mb-4 flex items-center gap-2">
                     <Clock className="size-5" />
                     Available Times
+                    {loadingSlots && <span className="text-xs text-gray-500 ml-2">Checking availability...</span>}
                   </h3>
                   
                   <div className="flex items-center gap-4 mb-4 text-sm">
