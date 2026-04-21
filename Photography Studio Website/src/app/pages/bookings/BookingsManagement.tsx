@@ -1,7 +1,6 @@
 import { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router';
-import { Search, Calendar as CalendarIcon, Package, Plus, ChevronLeft, ChevronRight, Filter, Clock, BarChart3, TrendingUp, DollarSign, CheckCircle, Trash2, Edit } from 'lucide-react';
-import { Button } from '../../components/ui/button';
+import { Search, Calendar as CalendarIcon, Package, Plus, ChevronLeft, ChevronRight, Clock, BarChart3, TrendingUp, DollarSign, CheckCircle, Trash2, Edit, Printer } from 'lucide-react';import { Button } from '../../components/ui/button';
 import { Input } from '../../components/ui/input';
 import { Card } from '../../components/ui/card';
 import { Badge } from '../../components/ui/badge';
@@ -87,6 +86,139 @@ export default function BookingsManagement() {
       toast.error('Error updating booking status');
     }
   };
+
+  const handlePrintBooking = (booking: any) => {
+  const clientName = `${booking.first_name || ''} ${booking.last_name || ''}`.trim() || 'Unknown Client';
+  const printDate = new Date().toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' });
+  const eventDate = booking.event_date ? new Date(booking.event_date).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' }) : 'N/A';
+
+  const printContent = `
+    <!DOCTYPE html>
+    <html>
+    <head>
+      <title>Booking Confirmation - ${booking.booking_number}</title>
+      <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: Georgia, serif; color: #1a1a1a; background: white; }
+        .page { width: 210mm; min-height: 297mm; padding: 0; margin: 0 auto; position: relative; }
+        .header {
+          background: linear-gradient(135deg, #1a1a1a 0%, #2d2d2d 50%, #c9a84c 100%);
+          padding: 30px 50px 50px;
+          display: flex;
+          justify-content: space-between;
+          align-items: center;
+          clip-path: ellipse(100% 100% at 50% 0%);
+        }
+        .logo-text { font-size: 36px; font-style: italic; color: #c9a84c; font-family: 'Palatino Linotype', Georgia, serif; }
+        .tagline { font-size: 11px; color: #d4b896; letter-spacing: 2px; text-transform: uppercase; margin-top: 4px; }
+        .contact-section { text-align: right; font-size: 11px; }
+        .contact-section p { margin: 3px 0; color: #d4d4d4; }
+        .content { padding: 40px 50px; }
+        .confirmation-title {
+          text-align: center; font-size: 22px; letter-spacing: 4px;
+          text-transform: uppercase; color: #1a1a1a;
+          border-bottom: 2px solid #c9a84c; border-top: 2px solid #c9a84c;
+          padding: 12px 0; margin-bottom: 35px;
+        }
+        .bill-meta { display: flex; justify-content: space-between; margin-bottom: 30px; font-size: 12px; }
+        .bill-meta div { color: #555; }
+        .bill-meta strong { color: #1a1a1a; }
+        .section { margin-bottom: 25px; border: 1px solid #e8e0d0; border-radius: 4px; overflow: hidden; }
+        .section-header {
+          background: linear-gradient(90deg, #1a1a1a, #2d2d2d);
+          color: #c9a84c; padding: 10px 20px; font-size: 12px;
+          letter-spacing: 2px; text-transform: uppercase;
+        }
+        .section-body { padding: 20px; }
+        .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; }
+        .field label { font-size: 10px; text-transform: uppercase; letter-spacing: 1px; color: #888; display: block; margin-bottom: 4px; }
+        .field span { font-size: 13px; color: #1a1a1a; font-weight: 600; }
+        .total-box {
+          background: linear-gradient(135deg, #1a1a1a, #2d2d2d); color: white;
+          padding: 20px 30px; border-radius: 4px;
+          display: flex; justify-content: space-between; align-items: center; margin-bottom: 30px;
+        }
+        .total-label { font-size: 13px; color: #d4d4d4; letter-spacing: 1px; }
+        .total-amount { font-size: 28px; color: #c9a84c; font-weight: bold; }
+        .footer {
+          position: absolute; bottom: 0; left: 0; right: 0;
+          background: linear-gradient(135deg, #c9a84c 0%, #2d2d2d 50%, #1a1a1a 100%);
+          padding: 40px 50px 20px; clip-path: ellipse(100% 100% at 50% 100%); text-align: center;
+        }
+        .footer-links { display: flex; justify-content: center; gap: 40px; }
+        .footer-links span { color: #d4b896; font-size: 11px; }
+        .thank-you { text-align: center; color: #888; font-size: 12px; font-style: italic; margin-bottom: 20px; }
+        @media print { body { -webkit-print-color-adjust: exact; print-color-adjust: exact; } }
+      </style>
+    </head>
+    <body>
+      <div class="page">
+        <div class="header">
+          <div>
+            <div class="logo-text">Ambiance</div>
+            <div class="tagline">Capturing Timeless Moments</div>
+          </div>
+          <div class="contact-section">
+            <p>7, 2 Charlemont Rd, Colombo</p>
+            <p>+94779774518</p>
+            <p>www.ambiance.lk</p>
+          </div>
+        </div>
+        <div class="content">
+          <div class="confirmation-title">Booking Confirmation</div>
+          <div class="bill-meta">
+            <div><strong>Print Date:</strong> ${printDate}</div>
+            <div><strong>Booking #:</strong> ${booking.booking_number || booking.id}</div>
+            <div><strong>Status:</strong> ${(booking.status || 'pending').toUpperCase()}</div>
+          </div>
+          <div class="section">
+            <div class="section-header">Client Information</div>
+            <div class="section-body">
+              <div class="grid-2">
+                <div class="field"><label>Full Name</label><span>${clientName}</span></div>
+                <div class="field"><label>Email</label><span>${booking.email || 'N/A'}</span></div>
+              </div>
+            </div>
+          </div>
+          <div class="section">
+            <div class="section-header">Booking Details</div>
+            <div class="section-body">
+              <div class="grid-2">
+                <div class="field"><label>Service</label><span>${booking.service_type || 'N/A'}</span></div>
+                <div class="field"><label>Event Date</label><span>${eventDate}</span></div>
+                <div class="field"><label>Event Time</label><span>${booking.event_time || 'N/A'}</span></div>
+                <div class="field"><label>Duration</label><span>${booking.duration_hours || 'N/A'} hrs</span></div>
+                <div class="field"><label>Location</label><span>${booking.location || 'N/A'}</span></div>
+                <div class="field"><label>Notes</label><span>${booking.notes || 'None'}</span></div>
+              </div>
+            </div>
+          </div>
+          <div class="total-box">
+            <div class="total-label">TOTAL AMOUNT</div>
+            <div class="total-amount">LKR ${parseFloat(booking.amount || 0).toLocaleString()}</div>
+          </div>
+          <div class="thank-you">Thank you for choosing Ambiance. We look forward to capturing your timeless moments.</div>
+        </div>
+        <div class="footer">
+          <div class="footer-links">
+            <span>ambiance.lk</span>
+            <span>www.ambiance.lk</span>
+            <span>studioambiance.lk</span>
+          </div>
+        </div>
+      </div>
+    </body>
+    </html>
+  `;
+
+  const printWindow = window.open('', '_blank');
+  if (printWindow) {
+    printWindow.document.write(printContent);
+    printWindow.document.close();
+    printWindow.focus();
+    setTimeout(() => printWindow.print(), 500);
+  }
+};
 
   const getClientName = (booking: any) => {
     if (booking.first_name || booking.last_name) {
@@ -369,8 +501,8 @@ export default function BookingsManagement() {
           </TabsContent>
 
           <TabsContent value="packages" className="space-y-6 mt-6">
-            <PackagesView packages={[] /* keep existing local packing sample or integrate real packages here */} />
-          </TabsContent>
+                    <PackagesView />        
+                      </TabsContent>
         </Tabs>
       </div>
     </div>
@@ -448,20 +580,21 @@ function CalendarView({ currentMonth, setCurrentMonth, bookings, getStatusColor 
 
                     <div className="space-y-1 flex-1 overflow-hidden">
                       {dayBookings.slice(0, 2).map((booking) => (
-                        <div
-                          key={booking.id}
-                          className={`text-xs px-1 py-0.5 rounded truncate ${booking.status === 'pending' ? 'bg-blue-500/20 text-blue-400' : booking.status === 'confirmed' ? 'bg-green-500/20 text-green-400' : 'bg-gray-500/20 text-gray-400'}`}
-                          title={`${getClientName(booking)} - ${getServiceType(booking)}`}
-                        >
-                          {getClientName(booking)}
-                        </div>
-                      ))}
+                              <div
+                                key={booking.id}
+                                className={`text-xs px-1 py-0.5 rounded truncate ${booking.status === 'pending' ? 'bg-blue-500/20 text-blue-400' : booking.status === 'confirmed' ? 'bg-green-500/20 text-green-400' : 'bg-gray-500/20 text-gray-400'}`}
+                                title={`${booking.clientName} - ${booking.packageType}`}
+                              >
+                                {booking.clientName}
+                              </div>
+                      ))} 
                     </div>
                   </div>
                 </button>
               );
             })}
           </div>
+
         </Card>
       </div>
 
@@ -473,8 +606,8 @@ function CalendarView({ currentMonth, setCurrentMonth, bookings, getStatusColor 
         <div className="space-y-2">
           {(selectedDay ? getBookingsForDay(selectedDay) : []).map((booking) => (
             <div key={booking.id} className="p-3 border border-gray-800 rounded-lg bg-black">
-              <p className="text-white text-sm font-medium">{getClientName(booking)}</p>
-              <p className="text-xs text-gray-500">{getServiceType(booking)} - {booking.event_time || 'No time'}</p>
+             <p className="text-white text-sm font-medium">{booking.clientName}</p>
+             <p className="text-xs text-gray-500">{booking.packageType} - {booking.event_time || 'No time'}</p>
               <Badge className={`${getStatusColor(booking.status || 'pending')} border text-xs`}>{booking.status || 'pending'}</Badge>
             </div>
           ))}
@@ -487,25 +620,235 @@ function CalendarView({ currentMonth, setCurrentMonth, bookings, getStatusColor 
   );
 }
 
-function PackagesView({ packages }: { packages: any[] }) {
+
+
+function PackagesView() {
+  const [packages, setPackages] = useState<any[]>([]);
+  const [loading, setLoading] = useState(false);
+  const [showModal, setShowModal] = useState(false);
+  const [editPackage, setEditPackage] = useState<any>(null);
+  const [form, setForm] = useState({
+    title: '', type: 'Wedding', description: '',
+    basePrice: '', durationHours: ''
+  });
+
+  useEffect(() => {
+    fetchPackages();
+  }, []);
+
+  const fetchPackages = async () => {
+    setLoading(true);
+    try {
+      const { packagesAPI } = await import('../../../services/api');
+      const response = await packagesAPI.getAll();
+      if (response.success) setPackages(response.data);
+    } catch (err) {
+      toast.error('Failed to load packages');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleSubmit = async () => {
+    if (!form.title || !form.basePrice) {
+      toast.error('Title and price required');
+      return;
+    }
+    try {
+      const { packagesAPI } = await import('../../../services/api');
+      const payload = {
+        title: form.title,
+        type: form.type,
+        description: form.description,
+        basePrice: parseFloat(form.basePrice),
+        durationHours: form.durationHours ? parseInt(form.durationHours) : null,
+      };
+      if (editPackage) {
+        await packagesAPI.update(editPackage.id, { ...payload, active: true });
+        toast.success('Package updated!');
+      } else {
+        await packagesAPI.create(payload);
+        toast.success('Package created!');
+      }
+      setShowModal(false);
+      setEditPackage(null);
+      setForm({ title: '', type: 'Wedding', description: '', basePrice: '', durationHours: '' });
+      fetchPackages();
+    } catch (err) {
+      toast.error('Failed to save package');
+    }
+  };
+
+  const handleEdit = (pkg: any) => {
+    setEditPackage(pkg);
+    setForm({
+      title: pkg.title,
+      type: pkg.type,
+      description: pkg.description || '',
+      basePrice: pkg.base_price?.toString() || '',
+      durationHours: pkg.duration_hours?.toString() || '',
+    });
+    setShowModal(true);
+  };
+
+  const handleDelete = async (id: number) => {
+    if (!window.confirm('Delete this package?')) return;
+    try {
+      const { packagesAPI } = await import('../../../services/api');
+      await packagesAPI.delete(id);
+      toast.success('Package deleted');
+      fetchPackages();
+    } catch (err) {
+      toast.error('Failed to delete');
+    }
+  };
+
   return (
     <div className="space-y-4">
-      {packages.length === 0 ? (
-        <Card className="border-2 border-gray-800 bg-gradient-to-br from-[#2a0f0f] to-black p-8">
-          <p className="text-gray-400">No packages available yet.</p>
+      {/* Header */}
+      <div className="flex justify-between items-center">
+        <h3 className="text-lg text-yellow-500 font-serif uppercase">Service Packages</h3>
+        <Button
+          onClick={() => { setEditPackage(null); setForm({ title: '', type: 'Wedding', description: '', basePrice: '', durationHours: '' }); setShowModal(true); }}
+          className="bg-red-700 hover:bg-red-800 text-white"
+        >
+          <Plus className="size-4 mr-2" /> Add Package
+        </Button>
+      </div>
+
+      {/* Package List */}
+      {loading ? (
+        <Card className="border-2 border-gray-800 bg-gradient-to-br from-[#2a0f0f] to-black p-8 text-center">
+          <p className="text-gray-400">Loading packages...</p>
+        </Card>
+      ) : packages.length === 0 ? (
+        <Card className="border-2 border-gray-800 bg-gradient-to-br from-[#2a0f0f] to-black p-8 text-center">
+          <Package className="size-12 text-gray-600 mx-auto mb-3" />
+          <p className="text-gray-400 mb-4">No packages available yet.</p>
+          <Button onClick={() => setShowModal(true)} className="bg-red-700 hover:bg-red-800 text-white">
+            <Plus className="size-4 mr-2" /> Add First Package
+          </Button>
         </Card>
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           {packages.map((pkg) => (
-            <Card key={pkg.id} className="border-2 border-gray-800 bg-gradient-to-br from-[#2a0f0f] to-black p-4">
-              <div className="flex justify-between items-center mb-3">
-                <p className="text-white font-semibold">{pkg.title}</p>
-                <Badge className="bg-yellow-500 text-black">{pkg.type}</Badge>
+            <Card key={pkg.id} className="border-2 border-gray-800 bg-gradient-to-br from-[#2a0f0f] to-black p-5">
+              <div className="flex justify-between items-start mb-3">
+                <div>
+                  <h4 className="text-white font-semibold text-lg">{pkg.title}</h4>
+                  <Badge className="bg-yellow-500/20 text-yellow-400 border border-yellow-500/30 mt-1">{pkg.type}</Badge>
+                </div>
+                <div className="flex gap-2">
+                  <Button variant="ghost" size="sm" onClick={() => handleEdit(pkg)} className="text-yellow-500 hover:bg-yellow-500/10">
+                    <Edit className="size-4" />
+                  </Button>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => handlePrintBooking(booking)}
+                    className="text-yellow-500 hover:text-yellow-400 hover:bg-yellow-500/10"
+                  >
+                    <Printer className="size-4" />
+                  </Button>
+                  <Button variant="ghost" size="sm" onClick={() => handleDelete(pkg.id)} className="text-red-400 hover:bg-red-500/10">
+                    <Trash2 className="size-4" />
+                  </Button>
+                </div>
               </div>
-              <p className="text-gray-400 text-sm">{pkg.description}</p>
-              <p className="text-white font-semibold mt-3">Rs.{pkg.basePrice}</p>
+              <p className="text-gray-400 text-sm mb-3">{pkg.description || 'No description'}</p>
+              <div className="flex justify-between text-sm">
+                <span className="text-gray-500">Duration: <span className="text-white">{pkg.duration_hours || '-'} hrs</span></span>
+                <span className="text-orange-400 font-bold text-lg">Rs.{parseFloat(pkg.base_price).toLocaleString()}</span>
+              </div>
             </Card>
           ))}
+        </div>
+      )}
+
+      {/* Add/Edit Modal */}
+      {showModal && (
+        <div className="fixed inset-0 bg-black/70 flex items-center justify-center z-50">
+          <div className="bg-gray-900 border-2 border-gray-800 rounded-xl p-6 w-full max-w-md mx-4">
+            <h3 className="text-xl font-serif text-yellow-500 mb-6">
+              {editPackage ? 'Edit Package' : 'Add New Package'}
+            </h3>
+
+            <div className="space-y-4">
+              <div>
+                <label className="text-gray-300 text-sm block mb-1">Package Title *</label>
+                <input
+                  value={form.title}
+                  onChange={(e) => setForm({ ...form, title: e.target.value })}
+                  placeholder="e.g. Wedding Gold"
+                  className="w-full bg-gray-800 border border-gray-700 text-white rounded-lg px-3 py-2 text-sm"
+                />
+              </div>
+
+              <div>
+                <label className="text-gray-300 text-sm block mb-1">Type *</label>
+                <select
+                  value={form.type}
+                  onChange={(e) => setForm({ ...form, type: e.target.value })}
+                  className="w-full bg-gray-800 border border-gray-700 text-white rounded-lg px-3 py-2 text-sm"
+                >
+                  <option value="Wedding">Wedding</option>
+                  <option value="Engagement">Engagement</option>
+                  <option value="Mehendi/Haldi">Mehendi/Haldi</option>
+                  <option value="Preshoot">Preshoot</option>
+                  <option value="Event">Event</option>
+                  <option value="Studio">Studio</option>
+                  <option value="DJ">DJ</option>
+                </select>
+              </div>
+
+              <div>
+                <label className="text-gray-300 text-sm block mb-1">Description</label>
+                <textarea
+                  value={form.description}
+                  onChange={(e) => setForm({ ...form, description: e.target.value })}
+                  placeholder="Package details..."
+                  rows={3}
+                  className="w-full bg-gray-800 border border-gray-700 text-white rounded-lg px-3 py-2 text-sm"
+                />
+              </div>
+
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="text-gray-300 text-sm block mb-1">Price (Rs.) *</label>
+                  <input
+                    type="number"
+                    value={form.basePrice}
+                    onChange={(e) => setForm({ ...form, basePrice: e.target.value })}
+                    placeholder="125000"
+                    className="w-full bg-gray-800 border border-gray-700 text-white rounded-lg px-3 py-2 text-sm"
+                  />
+                </div>
+                <div>
+                  <label className="text-gray-300 text-sm block mb-1">Duration (hrs)</label>
+                  <input
+                    type="number"
+                    value={form.durationHours}
+                    onChange={(e) => setForm({ ...form, durationHours: e.target.value })}
+                    placeholder="6"
+                    className="w-full bg-gray-800 border border-gray-700 text-white rounded-lg px-3 py-2 text-sm"
+                  />
+                </div>
+              </div>
+            </div>
+
+            <div className="flex gap-3 mt-6">
+              <Button
+                onClick={() => { setShowModal(false); setEditPackage(null); }}
+                variant="outline"
+                className="flex-1 border-gray-700 text-gray-300"
+              >
+                Cancel
+              </Button>
+              <Button onClick={handleSubmit} className="flex-1 bg-red-700 hover:bg-red-800 text-white">
+                {editPackage ? 'Update Package' : 'Add Package'}
+              </Button>
+            </div>
+          </div>
         </div>
       )}
     </div>
