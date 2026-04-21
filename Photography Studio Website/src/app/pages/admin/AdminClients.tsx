@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router';
-import { Search, Plus, Edit, Trash2, Eye, EyeOff, UserCheck, UserX, Mail, Phone, Calendar, X, Shield, ShieldCheck } from 'lucide-react';
+import { Search, Plus, Edit, Trash2, Eye, EyeOff, UserCheck, UserX, Mail, Phone, Calendar, X, Shield, ShieldCheck, Download } from 'lucide-react';
 import { Button } from '../../components/ui/button';
 import { Input } from '../../components/ui/input';
 import { Label } from '../../components/ui/label';
@@ -11,6 +11,7 @@ import { toast } from 'sonner';
 import { motion, AnimatePresence } from 'motion/react';
 import AdminNavigation from '../../components/AdminNavigation';
 import { clientsAPI } from '../../../services/api';
+import { generateClientReportHTML } from '../../utils/documentTemplate';
 
 // Mock client data
 const mockClients = [
@@ -230,6 +231,41 @@ export default function AdminClients() {
     toast.success('Client status updated');
   };
 
+  const handleDownloadReport = async (client: any) => {
+    try {
+      const response = await fetch(`http://localhost:5000/api/clients/${client.id}/report`);
+      
+      if (!response.ok) {
+        throw new Error('Failed to fetch report data');
+      }
+
+      const reportData = await response.json();
+
+      if (!reportData.success) {
+        throw new Error(reportData.message || 'Failed to generate report');
+      }
+
+      // Generate HTML report using the template
+      const htmlContent = generateClientReportHTML(reportData.data);
+
+      // Create blob and download
+      const blob = new Blob([htmlContent], { type: 'text/html' });
+      const url = window.URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = `${client.firstName}-${client.lastName}-report-${new Date().toISOString().split('T')[0]}.html`;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      window.URL.revokeObjectURL(url);
+
+      toast.success('Report downloaded successfully');
+    } catch (error) {
+      console.error('Error downloading report:', error);
+      toast.error(error instanceof Error ? error.message : 'Failed to download report');
+    }
+  };
+
   const getStatusBadge = (status: string) => {
     switch (status) {
       case 'active':
@@ -414,6 +450,15 @@ export default function AdminClients() {
                       </td>
                       <td className="px-6 py-4">
                         <div className="flex items-center gap-2">
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            onClick={() => handleDownloadReport(client)}
+                            className="border-blue-700 text-blue-400 hover:bg-blue-900"
+                            title="Download client report"
+                          >
+                            <Download className="size-4" />
+                          </Button>
                           <Button
                             size="sm"
                             variant="outline"

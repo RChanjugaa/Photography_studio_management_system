@@ -140,4 +140,91 @@ router.get('/stats/overview', async (req, res) => {
   }
 });
 
+// Get client report (bookings + payments + statistics)
+router.get('/:id/report', async (req, res) => {
+  try {
+    const { id } = req.params;
+    const connection = await getDBPool().getConnection();
+
+    // Get client information
+    const [clientData] = await connection.execute(
+      `SELECT * FROM clients WHERE id = ?`,
+      [id]
+    );
+
+    if (clientData.length === 0) {
+      connection.release();
+      return res.status(404).json({ success: false, message: 'Client not found' });
+    }
+
+    const client = clientData[0];
+
+    // Get all bookings for this client
+    const [bookings] = await connection.execute(
+      `SELECT b.*, 
+              GROUP_CONCAT(e.first_name, ' ', e.last_name) as employees
+       FROM bookings b
+       LEFT JOIN employees e ON FIND_IN_SET(e.id, JSON_UNQUOTE(JSON_EXTRACT(b.assigned_employees, '$[*]')))
+       WHERE b.client_id = ?
+       GROUP BY b.id
+       ORDER BY b.event_date DESC`,
+      [id]
+    );
+
+    // Get all payments for this client
+    const [payments] = await connection.execute(
+      `SELECT p.*, b.booking_number, b.service_type
+       FROM payments p
+       LEFT JOIN bookings b ON p.booking_id = b.id
+       WHERE p.client_id = ?
+       ORDER BY p.payment_date DESC`,
+      [id]
+    );
+
+    // Get booking statistics
+    const [bookingStats] = await connection.execute(
+      `SELECT 
+        COUNT(*) as total_bookings,
+        SUM(CASE WHEN status = 'completed' THEN 1 ELSE 0 END) as completed_bookings,
+        SUM(CASE WHEN status = 'pending' THEN 1 ELSE 0 END) as pending_bookings,
+        SUM(CASE WHEN status = 'cancelled' THEN 1 ELSE 0 END) as cancelled_bookings,
+        SUM(amount) as total_booking_value,
+        AVG(amount) as avg_booking_value
+       FROM bookings
+       WHERE client_id = ?`,
+      [id]
+    );
+
+    // Get payment statistics
+    const [paymentStats] = await connection.execute(
+      `SELECT 
+        COUNT(*) as total_payments,
+        SUM(CASE WHEN status = 'completed' THEN 1 ELSE 0 END) as completed_payments,
+        SUM(CASE WHEN status = 'pending' THEN 1 ELSE 0 END) as pending_payments,
+        SUM(CASE WHEN status = 'failed' THEN 1 ELSE 0 END) as failed_payments,
+        SUM(amount) as total_paid,
+        AVG(amount) as avg_payment
+       FROM payments
+       WHERE client_id = ?`,
+      [id]
+    );
+
+    connection.release();
+
+    res.json({
+      success: true,
+      data: {
+        client: client,
+        bookings: bookings,
+        payments: payments,
+        bookingStats: bookingStats[0],
+        paymentStats: paymentStats[0],
+        generatedAt: new Date().toISOString()
+      }
+    });
+  } catch (err) {
+    res.status(500).json({ success: false, message: err.message });
+  }
+});
+
 module.exports = router;
