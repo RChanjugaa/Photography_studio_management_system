@@ -1,211 +1,62 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Link } from 'react-router';
 import { Check, Heart, Camera, Users, Video, ArrowRight, Star } from 'lucide-react';
 import { Button } from '../components/ui/button';
 import { Card } from '../components/ui/card';
 import { Badge } from '../components/ui/badge';
 import { motion } from 'motion/react';
+import { packagesAPI } from '../../services/api';
 
 export default function Packages() {
-  const [selectedCategory, setSelectedCategory] = useState('all');
-  
-  const categories = [
-    { id: 'all', name: 'All Packages' },
-    { id: 'wedding', name: 'Wedding' },
-    { id: 'event', name: 'Events' },
-    { id: 'studio', name: 'Studio' },
-    { id: 'video', name: 'Video' }
-  ];
-  
-  const packages = [
-    {
-      id: 1,
-      category: 'wedding',
-      name: 'Wedding Platinum',
-      price: 185000,
-      duration: 'Full Day',
-      featured: true,
-      icon: Heart,
-      color: 'from-purple-600 to-purple-700',
-      features: [
-        'Full day coverage (12 hours)',
-        '2 professional photographers',
-        '1 cinematographer',
-        'Pre-wedding photoshoot',
-        '500+ edited photos',
-        'Highlight video (5-7 minutes)',
-        'Online gallery',
-        'Premium photo album (60 pages)',
-        'Same-day slideshow',
-        'Drone coverage'
-      ]
-    },
-    {
-      id: 2,
-      category: 'wedding',
-      name: 'Wedding Gold',
-      price: 125000,
-      duration: '8 Hours',
-      featured: false,
-      icon: Heart,
-      color: 'from-yellow-600 to-yellow-500',
-      features: [
-        'Coverage for 8 hours',
-        '2 professional photographers',
-        '300+ edited photos',
-        'Highlight video (3-5 minutes)',
-        'Online gallery',
-        'Photo album (40 pages)',
-        'Engagement photoshoot',
-        'USB with all files'
-      ]
-    },
-    {
-      id: 3,
-      category: 'wedding',
-      name: 'Wedding Silver',
-      price: 85000,
-      duration: '6 Hours',
-      featured: false,
-      icon: Heart,
-      color: 'from-gray-400 to-gray-500',
-      features: [
-        'Coverage for 6 hours',
-        '1 professional photographer',
-        '200+ edited photos',
-        'Online gallery',
-        'Photo album (30 pages)',
-        'USB with all files',
-        'Basic editing included'
-      ]
-    },
-    {
-      id: 4,
-      category: 'event',
-      name: 'Corporate Event',
-      price: 95000,
-      duration: '4-8 Hours',
-      featured: false,
-      icon: Users,
-      color: 'from-blue-600 to-blue-700',
-      features: [
-        'Multi-camera setup',
-        'Professional photographer',
-        'Event highlight reel',
-        '150+ edited photos',
-        'Same-day social media content',
-        'Online gallery',
-        'Commercial usage rights',
-        'Fast turnaround (3 days)'
-      ]
-    },
-    {
-      id: 5,
-      category: 'event',
-      name: 'Birthday Party',
-      price: 45000,
-      duration: '3 Hours',
-      featured: false,
-      icon: Camera,
-      color: 'from-pink-600 to-pink-700',
-      features: [
-        '3 hours coverage',
-        'Professional photographer',
-        '100+ edited photos',
-        'Candid & posed shots',
-        'Online gallery',
-        'Printed photos (50 pcs)',
-        'Photo collage design',
-        'USB with all files'
-      ]
-    },
-    {
-      id: 6,
-      category: 'studio',
-      name: 'Studio Portrait Session',
-      price: 25000,
-      duration: '2 Hours',
-      featured: false,
-      icon: Camera,
-      color: 'from-indigo-600 to-indigo-700',
-      features: [
-        '2 hour studio session',
-        'Professional lighting setup',
-        '30+ edited photos',
-        'Multiple outfit changes',
-        'Makeup artist available',
-        'Online gallery',
-        'Printed photos (10 pcs)',
-        'Immediate digital delivery'
-      ]
-    },
-    {
-      id: 7,
-      category: 'studio',
-      name: 'Family Portrait Package',
-      price: 35000,
-      duration: '1.5 Hours',
-      featured: false,
-      icon: Users,
-      color: 'from-green-600 to-green-700',
-      features: [
-        '1.5 hour session',
-        'Up to 6 family members',
-        '40+ edited photos',
-        'Indoor & outdoor options',
-        'Multiple backgrounds',
-        'Online gallery',
-        'Framed print (16x20)',
-        'Digital files included'
-      ]
-    },
-    {
-      id: 8,
-      category: 'video',
-      name: 'Cinematic Wedding Video',
-      price: 150000,
-      duration: 'Full Day',
-      featured: true,
-      icon: Video,
-      color: 'from-red-600 to-red-700',
-      features: [
-        'Full day video coverage',
-        '2 videographers',
-        'Cinematic editing',
-        'Highlight film (10-15 min)',
-        'Full ceremony edit',
-        'Drone footage',
-        '4K video quality',
-        'Custom music selection',
-        'Blu-ray + digital files'
-      ]
-    },
-    {
-      id: 9,
-      category: 'video',
-      name: 'Event Highlight Video',
-      price: 65000,
-      duration: '4 Hours',
-      featured: false,
-      icon: Video,
-      color: 'from-orange-600 to-orange-700',
-      features: [
-        '4 hour coverage',
-        'Professional videographer',
-        'Highlight reel (3-5 min)',
-        'Social media edits',
-        '1080p HD quality',
-        'Background music',
-        'Color grading',
-        'Fast delivery (5 days)'
-      ]
+
+const [selectedCategory, setSelectedCategory] = useState('all');
+const [dbPackages, setDbPackages] = useState<any[]>([]);
+const [loadingPkgs, setLoadingPkgs] = useState(true);
+
+useEffect(() => {
+  const fetchPkgs = async () => {
+    try {
+      const res = await packagesAPI.getActive();
+      if (res.success && res.data.length > 0) {
+        setDbPackages(res.data);
+      }
+    } catch (e) {
+      console.error('Failed to load packages');
+    } finally {
+      setLoadingPkgs(false);
     }
-  ];
+  };
+  fetchPkgs();
+}, []);
+
+  const categories = [
+  { id: 'all', name: 'All Packages' },
+  { id: 'wedding', name: 'Wedding' },
+  { id: 'engagement', name: 'Engagement' },
+  { id: 'mehendi/haldi', name: 'Mehendi/Haldi' },
+  { id: 'preshoot', name: 'Preshoot' },
+  { id: 'event', name: 'Event' },
+  { id: 'studio', name: 'Studio' },
+  { id: 'dj', name: 'DJ' },
+];
   
-  const filteredPackages = selectedCategory === 'all' 
-    ? packages 
-    : packages.filter(pkg => pkg.category === selectedCategory);
-  
+                        const displayPackages = dbPackages.length > 0 ? dbPackages.map((p: any) => ({
+                            id: p.id,
+                            category: p.type.toLowerCase(),
+                            name: p.title,
+                            price: parseFloat(p.base_price),
+                            duration: p.duration_hours ? `${p.duration_hours} Hours` : 'Custom',
+                            featured: false,
+                            icon: Heart,
+                            color: 'from-yellow-600 to-yellow-500',
+                            features: p.description 
+                              ? p.description.split(',').map((f: string) => f.trim()) 
+                              : ['Professional coverage', 'Edited photos', 'Digital delivery']
+                          })) : [];
+
+                const filteredPackages = selectedCategory === 'all'
+                  ? displayPackages
+                  : displayPackages.filter(pkg => pkg.category === selectedCategory);
   return (
     <div className="min-h-screen bg-black">
       {/* Hero Section */}
