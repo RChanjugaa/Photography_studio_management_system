@@ -9,7 +9,7 @@ The Ambiance Studio application has **TWO SEPARATE** booking systems:
 
 ---
 
-## 👥 **CUSTOMER FLOW** (Public Users)
+##  **CUSTOMER FLOW** (Public Users)
 
 ### **Access:**
 - URL: `/client/*`
@@ -43,7 +43,7 @@ The Ambiance Studio application has **TWO SEPARATE** booking systems:
 - Access their personal dashboard
 - View profile and booking history
 
-✅ **Submit Booking Requests** (`/client/book`)
+ **Submit Booking Requests** (`/client/book`)
 - Choose service type (Wedding, Event, Studio, etc.)
 - Select preferred date
 - Choose time window
@@ -56,24 +56,24 @@ The Ambiance Studio application has **TWO SEPARATE** booking systems:
 - Check scheduled dates
 - View assigned photographer
 
-✅ **Update Profile** (`/client/profile`)
+ **Update Profile** (`/client/profile`)
 - Change personal information
 - Update contact details
 - Change password
 
 ### **What Customers CANNOT Do:**
 
-❌ Access admin booking management (`/admin/bookings`)
-❌ Create confirmed bookings directly
-❌ Assign photographers
-❌ Manage packages or pricing
-❌ View other customers' bookings
-❌ Access payment/invoice management
-❌ View reports or analytics
+ Access admin booking management (`/admin/bookings`)
+ Create confirmed bookings directly
+ Assign photographers
+ Manage packages or pricing
+ View other customers' bookings
+ Access payment/invoice management
+ View reports or analytics
 
 ---
 
-## 🔐 **ADMIN FLOW** (Studio Staff)
+##  **ADMIN FLOW** (Studio Staff)
 
 ### **Access:**
 - URL: `/admin/*`
@@ -98,41 +98,41 @@ The Ambiance Studio application has **TWO SEPARATE** booking systems:
 
 ### **What Admins CAN Do:**
 
-✅ **View All Customer Requests**
+ **View All Customer Requests**
 - See all submitted booking requests
 - Filter by status, type, date
 - Search by client name or ID
 
-✅ **Create Bookings** (`/admin/bookings/new`)
+ **Create Bookings** (`/admin/bookings/new`)
 - Create bookings directly (skip request process)
 - Assign photographers
 - Set dates, times, packages
 - Confirm booking immediately
 
-✅ **Manage Bookings** (`/admin/bookings`)
+ **Manage Bookings** (`/admin/bookings`)
 - **List View:** Table of all bookings with filters
 - **Calendar View:** Visual calendar with availability
 - **Packages View:** Manage service packages
 
-✅ **Approve/Reject Requests**
+ **Approve/Reject Requests**
 - Review customer booking requests
 - Convert requests into confirmed bookings
 - Assign resources (photographers, equipment)
 - Set final pricing
 
-✅ **Calendar Management** (`/admin/calendar`)
+ **Calendar Management** (`/admin/calendar`)
 - View booking schedule
 - Check availability by date/time
 - Prevent double bookings
 - Manage time slots
 
-✅ **Package Management** (`/admin/packages`)
+ **Package Management** (`/admin/packages`)
 - Create service packages
 - Set pricing and duration
 - Manage package details
 - Activate/deactivate packages
 
-✅ **Full System Access**
+ **Full System Access**
 - Employee management
 - Payment & invoice management
 - Event management
@@ -141,8 +141,8 @@ The Ambiance Studio application has **TWO SEPARATE** booking systems:
 
 ### **What Admins CANNOT See:**
 
-❌ Customer passwords (encrypted)
-❌ Individual client portal views (designed for clients)
+ Customer passwords (encrypted)
+ Individual client portal views (designed for clients)
 
 ---
 
@@ -162,7 +162,7 @@ The Ambiance Studio application has **TWO SEPARATE** booking systems:
 
 ---
 
-## 🔄 **BOOKING REQUEST WORKFLOW**
+##  **BOOKING REQUEST WORKFLOW**
 
 ### **Complete Flow:**
 
@@ -224,7 +224,7 @@ The Ambiance Studio application has **TWO SEPARATE** booking systems:
 
 ---
 
-## 🛡️ **ROUTE PROTECTION**
+##  **ROUTE PROTECTION**
 
 ### **Customer Routes:**
 ```javascript
@@ -263,7 +263,7 @@ The Ambiance Studio application has **TWO SEPARATE** booking systems:
 
 ---
 
-## 📱 **USER EXPERIENCE**
+##  **USER EXPERIENCE**
 
 ### **Customer Experience:**
 
@@ -325,7 +325,7 @@ The Ambiance Studio application has **TWO SEPARATE** booking systems:
 
 ---
 
-## 🎨 **THEME CONSISTENCY**
+##  **THEME CONSISTENCY**
 
 Both customer and admin interfaces use the **Ambiance Studio Theme**:
 
@@ -345,7 +345,7 @@ Both customer and admin interfaces use the **Ambiance Studio Theme**:
 
 ---
 
-## ✅ **TESTING THE SYSTEM**
+##  **TESTING THE SYSTEM**
 
 ### **Test as Customer:**
 
@@ -412,7 +412,7 @@ Both customer and admin interfaces use the **Ambiance Studio Theme**:
 
 ---
 
-## 🚀 **QUICK ACCESS URLs**
+##  **QUICK ACCESS URLs**
 
 ### **Customer:**
 - Login: `http://localhost:5173/client/login`
@@ -430,7 +430,7 @@ Both customer and admin interfaces use the **Ambiance Studio Theme**:
 
 ---
 
-## 🔒 **SECURITY NOTES**
+##  **SECURITY NOTES**
 
 1. **Route Protection:**
    - All `/client/*` routes check for `userRole === 'client'`
@@ -453,7 +453,7 @@ Both customer and admin interfaces use the **Ambiance Studio Theme**:
 
 ---
 
-## 📊 **DATA FLOW**
+##  **DATA FLOW**
 
 ```
 Customer Request → Database (status: pending)
