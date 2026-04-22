@@ -1,12 +1,12 @@
 # Event Management System - Complete Guide
 
-## 🎯 Overview
+##  Overview
 
 The Ambiance Photography Studio Event Management System provides comprehensive event creation, assignment, photo gallery management, and public event showcase capabilities.
 
 ---
 
-## 📋 Table of Contents
+## Table of Contents
 
 1. [System Architecture](#system-architecture)
 2. [Access Levels](#access-levels)
@@ -429,7 +429,7 @@ Dashboard > "Manage Events" card → /admin/events
 
 ---
 
-## 🎨 Design Features
+##  Design Features
 
 ### **Theme Consistency:**
 - **Background:** Black with burgundy gradients
@@ -493,7 +493,7 @@ Following requirements for pastel colors on category cards:
 
 ---
 
-## 🔄 Integration with Employee Module
+##  Integration with Employee Module
 
 ### **Photographer Assignment:**
 - Events link to employee IDs
@@ -508,7 +508,7 @@ Following requirements for pastel colors on category cards:
 
 ---
 
-## 🚀 Next Steps (Backend Integration)
+##  Next Steps (Backend Integration)
 
 When ready to connect to real database:
 
@@ -536,7 +536,7 @@ When ready to connect to real database:
 
 ---
 
-## 🎯 Key Differentiators
+## Key Differentiators
 
 ✅ **Instagram-Ready:** All photos uniform 1080×1080  
 ✅ **Public Showcase:** Completed events visible to potential clients  
@@ -549,7 +549,7 @@ When ready to connect to real database:
 
 ---
 
-## 📞 Support
+##  Support
 
 For questions or issues:
 - Check this guide first
@@ -559,7 +559,7 @@ For questions or issues:
 
 ---
 
-## 🎨 ShootProof Design Inspiration
+##  ShootProof Design Inspiration
 
 Following ShootProof gallery aesthetics:
 - ✅ Clean minimal design
@@ -571,5 +571,4 @@ Following ShootProof gallery aesthetics:
 - ✅ Grid-based layout
 
 ---
-
 **Built with ❤️ for Ambiance Photography Studio**
