@@ -520,7 +520,7 @@ localStorage.setItem('userEmail', 'amaya@ambiance.lk');
 
 ---
 
-## 📊 Navigation Analytics (Planned)
+##  Navigation Analytics (Planned)
 
 **Track User Flows:**
 - Most used module switches
@@ -560,4 +560,4 @@ localStorage.setItem('userEmail', 'amaya@ambiance.lk');
 
 ---
 
-**Complete navigation system for seamless module switching! 🎉**
+**Complete navigation system for seamless module switching! **
