@@ -238,7 +238,7 @@ localStorage.setItem('userEmail', 'admin@ambiance.lk');
 
 ---
 
-### **🎛️ Admin Dashboard** (`/admin/dashboard`)
+### ** Admin Dashboard** (`/admin/dashboard`)
 
 **Overview Stats:**
 - Total Employees
