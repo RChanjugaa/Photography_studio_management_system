@@ -61,7 +61,7 @@ The Ambiance Photography Studio Event Management System provides comprehensive e
 - ✅ Lightbox image viewer
 
 **What They CANNOT See:**
-- ❌ Upcoming events
+- Upcoming events
 - ❌ Event management controls
 - ❌ Private event notes
 - ❌ Booking IDs
