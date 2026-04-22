@@ -156,7 +156,7 @@ localStorage.setItem('userEmail', 'admin@ambiance.lk');
 
 ---
 
-## ✨ Feature Breakdown
+##  Feature Breakdown
 
 ### ** Public Employee Directory** (`/employees`)
 
