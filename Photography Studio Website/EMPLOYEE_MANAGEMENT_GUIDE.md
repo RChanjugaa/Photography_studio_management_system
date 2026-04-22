@@ -1,12 +1,12 @@
 # Employee Management System - Complete Guide
 
-## 🎯 Overview
+##  Overview
 
 The Ambiance Photography Studio Employee Management System is a comprehensive full-stack solution with public-facing directory, staff self-service portal, and admin management console.
 
 ---
 
-## 📋 Table of Contents
+##  Table of Contents
 
 1. [System Architecture](#system-architecture)
 2. [Access Levels](#access-levels)
@@ -50,59 +50,59 @@ The Ambiance Photography Studio Employee Management System is a comprehensive fu
 
 ---
 
-## 🔐 Access Levels
+##  Access Levels
 
 ### **1. PUBLIC (No Authentication Required)**
 
 **What They Can See:**
-- ✅ Employee directory with search and filters
-- ✅ Employee profiles (only publicly visible employees)
-- ✅ Public portfolio items only
-- ✅ Employee ratings and reviews
-- ✅ Specialties and certifications
+-  Employee directory with search and filters
+-  Employee profiles (only publicly visible employees)
+-  Public portfolio items only
+-  Employee ratings and reviews
+-  Specialties and certifications
 
 **What They CANNOT See:**
-- ❌ Private portfolio items
-- ❌ Salary information
-- ❌ Contact details (phone/email)
-- ❌ Hidden employees
-- ❌ Administrative data
+-  Private portfolio items
+-  Salary information
+-  Contact details (phone/email)
+-  Hidden employees
+-  Administrative data
 
 ---
 
 ### **2. STAFF (Login Required)**
 
 **What They Can Do:**
-- ✅ Edit own profile (name, bio, phone, email)
-- ✅ Manage own portfolio (add/delete items, set visibility)
-- ✅ View assigned tasks/bookings
-- ✅ View own salary and payslips (PRIVATE)
-- ✅ Update profile picture
+- Edit own profile (name, bio, phone, email)
+- Manage own portfolio (add/delete items, set visibility)
+- View assigned tasks/bookings
+- View own salary and payslips (PRIVATE)
+- Update profile picture
 
 **What They CANNOT Do:**
-- ❌ Change own role
-- ❌ Toggle public visibility of profile
-- ❌ View other employees' salaries
-- ❌ Access admin functions
-- ❌ Assign tasks
+-  Change own role
+-  Toggle public visibility of profile
+-  View other employees' salaries
+-  Access admin functions
+-  Assign tasks
 
 ---
 
 ### **3. ADMIN (Login Required)**
 
 **Full Permissions:**
-- ✅ Create, Read, Update, Delete employees
-- ✅ Manage employee salaries
-- ✅ Assign tasks to employees
-- ✅ Toggle public visibility
-- ✅ Change employee status (active/inactive)
-- ✅ View all data across the system
-- ✅ Upload payslips
-- ✅ Conflict checking for assignments
+-  Create, Read, Update, Delete employees
+-  Manage employee salaries
+-  Assign tasks to employees
+-  Toggle public visibility
+-  Change employee status (active/inactive)
+-  View all data across the system
+-  Upload payslips
+-  Conflict checking for assignments
 
 ---
 
-## 🚀 How to Access
+##  How to Access
 
 ### **Public Employee Directory**
 1. Navigate to the main website
@@ -178,7 +178,7 @@ localStorage.setItem('userEmail', 'admin@ambiance.lk');
 
 ---
 
-### **👤 Public Employee Profile** (`/employees/:id`)
+### ** Public Employee Profile** (`/employees/:id`)
 
 **Layout:**
 - Hero cover image
@@ -197,7 +197,7 @@ localStorage.setItem('userEmail', 'admin@ambiance.lk');
 
 ---
 
-### **👨‍💼 Staff Self-Service Portal** (`/staff/me`)
+### ** Staff Self-Service Portal** (`/staff/me`)
 
 **4 Tabs:**
 
@@ -266,7 +266,7 @@ localStorage.setItem('userEmail', 'admin@ambiance.lk');
 
 ---
 
-### **👥 Admin Employee Management** (`/admin/employees`)
+### ** Admin Employee Management** (`/admin/employees`)
 
 #### **Employee Directory Table**
 
@@ -345,7 +345,7 @@ GET  /admin/employees       → Employee Management Console
 
 ---
 
-## 🔑 Authentication Guide
+##  Authentication Guide
 
 ### **Mock Login System (Current Implementation)**
 
@@ -380,7 +380,7 @@ localStorage.setItem('userEmail', 'email@example.com');
 
 ---
 
-## 🎨 UI/UX Features
+##  UI/UX Features
 
 ### **Design Theme:**
 - **Background:** Black with burgundy gradients (`#2a0f0f`)
@@ -405,7 +405,7 @@ localStorage.setItem('userEmail', 'email@example.com');
 
 ---
 
-## 📊 Data Structure (Mock Data)
+##  Data Structure (Mock Data)
 
 ### **Employee Object:**
 ```javascript
@@ -458,7 +458,7 @@ localStorage.setItem('userEmail', 'email@example.com');
 
 ---
 
-## 🔄 Next Steps (Backend Integration)
+##  Next Steps (Backend Integration)
 
 When ready to connect to real database:
 
@@ -478,19 +478,19 @@ When ready to connect to real database:
 
 ---
 
-## 🎯 Key Differentiators
+##  Key Differentiators
 
-✅ **Privacy First:** Salary data never exposed to public
-✅ **Flexible Visibility:** Admin controls who appears publicly
-✅ **Self-Service:** Staff manage own profiles and portfolios
-✅ **Task Management:** Built-in assignment system
-✅ **Professional Design:** Dark, elegant Ambiance theme
-✅ **Mobile Responsive:** Works perfectly on all devices
-✅ **Real-time Filtering:** Instant search and filter results
+ **Privacy First:** Salary data never exposed to public
+ **Flexible Visibility:** Admin controls who appears publicly
+ **Self-Service:** Staff manage own profiles and portfolios
+ **Task Management:** Built-in assignment system
+ **Professional Design:** Dark, elegant Ambiance theme
+ **Mobile Responsive:** Works perfectly on all devices
+ **Real-time Filtering:** Instant search and filter results
 
 ---
 
-## 📞 Support
+##  Support
 
 For questions or issues:
 - Check this guide first
@@ -500,4 +500,4 @@ For questions or issues:
 
 ---
 
-**Built with ❤️ for Ambiance Photography Studio**
+**Built with  for Ambiance Photography Studio**
