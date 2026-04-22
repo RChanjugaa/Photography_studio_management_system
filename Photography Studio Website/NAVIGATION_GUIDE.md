@@ -1,6 +1,6 @@
 # Ambiance Studio - Complete Navigation Guide
 
-## 🗺️ System Overview
+##  System Overview
 
 The Ambiance Photography Studio management system consists of **two major modules** that are fully integrated:
 
@@ -9,7 +9,7 @@ The Ambiance Photography Studio management system consists of **two major module
 
 ---
 
-## 🏠 Quick Access Dashboard
+##  Quick Access Dashboard
 
 ### **Admin Dashboard** (`/admin/dashboard`)
 
@@ -22,10 +22,10 @@ The central hub for all admin operations with:
 - Upcoming Events: 2
 
 **Quick Action Cards:**
-- 🔴 **Manage Employees** → `/admin/employees`
-- 🟣 **Manage Events** → `/admin/events`
-- 🟢 **Salary Management** → `/admin/employees`
-- 🔵 **View Public Directory** → `/employees`
+-  **Manage Employees** → `/admin/employees`
+-  **Manage Events** → `/admin/events`
+-  **Salary Management** → `/admin/employees`
+-  **View Public Directory** → `/employees`
 
 **Navigation Bar:**
 ```
@@ -34,7 +34,7 @@ The central hub for all admin operations with:
 
 ---
 
-## 🎯 Main Access Points
+##  Main Access Points
 
 ### **1. Admin Access** (Full Control)
 
@@ -89,15 +89,15 @@ Password: any password
 
 ---
 
-## 🔄 Module Switching Methods
+##  Module Switching Methods
 
-### **Method 1: Top Navigation Bar** ⭐ **RECOMMENDED**
+### **Method 1: Top Navigation Bar**  **RECOMMENDED**
 
 **When logged in as Admin:**
 
 ```
 ┌──────────────────────────────────────────────────────┐
-│ Ambiance Admin │ Dashboard │ Employees │ Events │ 🚪 │
+│ Ambiance Admin │ Dashboard │ Employees │ Events │  │
 └──────────────────────────────────────────────────────┘
 ```
 
@@ -151,9 +151,9 @@ Home > Admin > Events > Event Details
 
 ---
 
-## 📍 Complete Route Map
+##  Complete Route Map
 
-### **🔐 Authentication Routes**
+### ** Authentication Routes**
 
 ```
 /admin/login              → Admin Login Page
@@ -164,7 +164,7 @@ Home > Admin > Events > Event Details
 
 ---
 
-### **👨‍💼 Admin Routes** (Requires: `role === 'admin'`)
+### ** Admin Routes** (Requires: `role === 'admin'`)
 
 ```
 /admin/dashboard          → Admin Dashboard
@@ -180,7 +180,7 @@ Home > Admin > Events > Event Details
 ├─ Salary Management
 └─ Task Assignment
 
-/admin/events             → Event Management ⭐ NEW
+/admin/events             → Event Management  NEW
 ├─ Event Categories
 ├─ Event Table
 ├─ Add/Edit Event
@@ -190,7 +190,7 @@ Home > Admin > Events > Event Details
 
 ---
 
-### **👔 Staff Routes** (Requires: `role === 'staff'`)
+### ** Staff Routes** (Requires: `role === 'staff'`)
 
 ```
 /staff/me                 → Staff Self-Service Portal
@@ -202,7 +202,7 @@ Home > Admin > Events > Event Details
 
 ---
 
-### **🌐 Public Routes** (No Authentication)
+### ** Public Routes** (No Authentication)
 
 ```
 /employees                → Employee Directory
@@ -216,12 +216,12 @@ Home > Admin > Events > Event Details
 ├─ Public Portfolio
 └─ Certifications
 
-/events/gallery           → Events Gallery ⭐ NEW
+/events/gallery           → Events Gallery  NEW
 ├─ Completed Events
 ├─ Search & Filters
 └─ Event Cards
 
-/events/gallery/:id       → Event Detail ⭐ NEW
+/events/gallery/:id       → Event Detail  NEW
 ├─ Event Information
 ├─ Photo Gallery
 └─ Lightbox Viewer
@@ -229,7 +229,7 @@ Home > Admin > Events > Event Details
 
 ---
 
-## 🧭 Navigation Workflows
+##  Navigation Workflows
 
 ### **Workflow 1: Admin Manages Employees Then Events**
 
@@ -296,7 +296,7 @@ Home > Admin > Events > Event Details
 
 ---
 
-## 🎨 Visual Navigation Guide
+##  Visual Navigation Guide
 
 ### **Admin Navigation Bar:**
 
@@ -329,7 +329,7 @@ Home > Admin > Events > Event Details
 
 ---
 
-## 📱 Mobile Navigation
+##  Mobile Navigation
 
 ### **Hamburger Menu:**
 
@@ -352,9 +352,9 @@ Home > Admin > Events > Event Details
 
 ---
 
-## 🔗 Cross-Module Integration
+##  Cross-Module Integration
 
-### **Employees ↔️ Events Integration:**
+### **Employees  Events Integration:**
 
 **From Employees to Events:**
 1. Admin creates employee "Amaya Silva"
@@ -385,7 +385,7 @@ Home > Admin > Events > Event Details
 
 ---
 
-## 🎯 Quick Access Cheat Sheet
+##  Quick Access Cheat Sheet
 
 ### **Admin Shortcuts:**
 
@@ -444,7 +444,7 @@ Click logout button in nav bar
 
 ---
 
-## 🚀 Developer Testing Workflow
+##  Developer Testing Workflow
 
 ### **Test All Modules Quickly:**
 
@@ -484,7 +484,7 @@ localStorage.setItem('userEmail', 'amaya@ambiance.lk');
 
 ---
 
-## 🎨 UI/UX Consistency
+##  UI/UX Consistency
 
 ### **Shared Design Elements:**
 
@@ -530,20 +530,20 @@ localStorage.setItem('userEmail', 'amaya@ambiance.lk');
 
 ---
 
-## 🔒 Access Control Summary
+##  Access Control Summary
 
 | Route | Public | Staff | Admin |
 |-------|--------|-------|-------|
-| `/employees` | ✅ | ✅ | ✅ |
-| `/events/gallery` | ✅ | ✅ | ✅ |
-| `/staff/me` | ❌ | ✅ | ✅ |
-| `/admin/dashboard` | ❌ | ❌ | ✅ |
-| `/admin/employees` | ❌ | ❌ | ✅ |
-| `/admin/events` | ❌ | ❌ | ✅ |
+| `/employees` 
+| `/events/gallery` 
+| `/staff/me` 
+| `/admin/dashboard` 
+| `/admin/employees` 
+| `/admin/events` 
 
 ---
 
-## 🎓 Best Practices
+##  Best Practices
 
 **Navigation Tips:**
 1. **Use the nav bar** for quick module switching
