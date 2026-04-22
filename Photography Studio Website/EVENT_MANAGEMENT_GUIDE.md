@@ -4,7 +4,7 @@
 
 The Ambiance Photography Studio Event Management System provides comprehensive event creation, assignment, photo gallery management, and public event showcase capabilities.
 
----
+
 
 ## Table of Contents
 
