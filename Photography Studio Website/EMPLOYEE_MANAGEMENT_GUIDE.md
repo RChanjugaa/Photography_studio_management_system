@@ -17,7 +17,7 @@ The Ambiance Photography Studio Employee Management System is a comprehensive fu
 
 ---
 
-## 🏗️ System Architecture
+##  System Architecture
 
 ### **Three-Tier Access Control:**
 
