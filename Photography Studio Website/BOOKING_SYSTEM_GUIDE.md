@@ -1,6 +1,6 @@
-# 📋 Booking System Guide - Customer vs Admin
+#  Booking System Guide - Customer vs Admin
 
-## 🎯 Overview
+## Overview
 
 The Ambiance Studio application has **TWO SEPARATE** booking systems:
 
@@ -34,12 +34,12 @@ The Ambiance Studio application has **TWO SEPARATE** booking systems:
 
 ### **What Customers CAN Do:**
 
-✅ **Register an Account** (`/client/register`)
+ **Register an Account** (`/client/register`)
 - Create profile with email, phone, password
 - Upload profile photo
 - Accept terms and conditions
 
-✅ **Login** (`/client/login`)
+ **Login** (`/client/login`)
 - Access their personal dashboard
 - View profile and booking history
 
@@ -50,7 +50,7 @@ The Ambiance Studio application has **TWO SEPARATE** booking systems:
 - Add special notes/requirements
 - Submit request for admin review
 
-✅ **View Booking History** (`/client/bookings`)
+**View Booking History** (`/client/bookings`)
 - See all submitted requests
 - View request status (Pending, Confirmed, Completed, etc.)
 - Check scheduled dates
