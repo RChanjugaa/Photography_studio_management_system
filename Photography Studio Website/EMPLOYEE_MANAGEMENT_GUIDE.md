@@ -322,7 +322,7 @@ Opens modal with:
 
 ---
 
-## 🗺️ Routes Reference
+##  Routes Reference
 
 ### **Public Routes (No Auth)**
 ```
