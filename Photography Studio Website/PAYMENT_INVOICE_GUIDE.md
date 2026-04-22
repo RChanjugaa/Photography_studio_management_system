@@ -1,12 +1,12 @@
-# Payment & Invoice Management - Complete Guide
+ Payment & Invoice Management - Complete Guide
 
-##  Overview
+  Overview
 
 The Ambiance Photography Studio Payment & Invoice Management System provides comprehensive financial tracking, payment recording, invoice generation, and financial reporting capabilities.
 
 ---
 
-##  Table of Contents
+  Table of Contents
 
 1. [System Architecture](#system-architecture)
 2. [Access Levels](#access-levels)
@@ -17,9 +17,9 @@ The Ambiance Photography Studio Payment & Invoice Management System provides com
 
 ---
 
-##  System Architecture
+  System Architecture
 
-### **Financial Management Flow:**
+ **Financial Management Flow:**
 
 ```
 ┌─────────────────────────────────────────────────┐
@@ -50,9 +50,9 @@ The Ambiance Photography Studio Payment & Invoice Management System provides com
 
 ---
 
-##  Access Levels
+ Access Levels
 
-### **ADMIN ONLY (Full Access)**
+ **ADMIN ONLY (Full Access)**
 
 **What They Can Do:**
 -  Record payments
