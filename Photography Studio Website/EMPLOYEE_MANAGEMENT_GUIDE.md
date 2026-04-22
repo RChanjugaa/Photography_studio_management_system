@@ -223,7 +223,7 @@ localStorage.setItem('userEmail', 'admin@ambiance.lk');
 - Priority badges (high/medium/low)
 - Status indicators (upcoming/completed)
 
-#### **4. My Salary** 🔒 **PRIVATE**
+#### **4. My Salary**  **PRIVATE**
 - Salary breakdown:
   - Base salary
   - Allowances
