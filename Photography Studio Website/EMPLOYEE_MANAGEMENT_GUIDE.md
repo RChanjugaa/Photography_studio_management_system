@@ -136,7 +136,7 @@ localStorage.setItem('userEmail', 'amaya@ambiance.lk');
 
 ### **Admin Portal Access**
 
-**Option 1: Login Page** ⭐ **RECOMMENDED**
+**Option 1: Login Page**  **RECOMMENDED**
 1. Visit `http://localhost:5173/admin/login`
 2. Enter any email (e.g., `admin@ambiance.lk`)
 3. Enter any password
