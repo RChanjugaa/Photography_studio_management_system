@@ -100,7 +100,7 @@ View assigned events from dashboard
 
 ---
 
-## 🚀 How to Access
+
 
 ### **Public Events Gallery**
 1. Navigate to the main website
