@@ -158,7 +158,7 @@ localStorage.setItem('userEmail', 'admin@ambiance.lk');
 
 ## ✨ Feature Breakdown
 
-### **📂 Public Employee Directory** (`/employees`)
+### ** Public Employee Directory** (`/employees`)
 
 **Features:**
 - Search by name, role, or specialty
