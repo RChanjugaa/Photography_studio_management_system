@@ -71,8 +71,8 @@ The Ambiance Photography Studio Event Management System provides comprehensive e
 
 ### **2. STAFF (Login Required)**
 
-**What They Can Do:**
-- ✅ View assigned events from dashboard
+**What They Can Do:
+View assigned events from dashboard
 - ✅ See event details and location
 - ✅ Check event dates and times
 - ✅ Read event notes
