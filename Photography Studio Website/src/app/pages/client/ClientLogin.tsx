@@ -7,6 +7,7 @@ import { Label } from '../../components/ui/label';
 import { Card } from '../../components/ui/card';
 import { toast } from 'sonner';
 import { motion } from 'motion/react';
+import { authAPI } from '../../../services/api';
 
 export default function ClientLogin() {
   const navigate = useNavigate();
@@ -30,18 +31,29 @@ export default function ClientLogin() {
     
     setIsLoading(true);
     
-    // Simulate API call
-    setTimeout(() => {
-      localStorage.setItem('isAuthenticated', 'true');
-      localStorage.setItem('userRole', 'client');
-      localStorage.setItem('userName', 'Sarah Silva');
-      localStorage.setItem('userEmail', email);
-      localStorage.setItem('userId', 'CLT-123');
+    try {
+      const response = await authAPI.clientLogin(email, password);
       
-      toast.success('Welcome back!');
-      navigate('/client/dashboard');
+      if (response.success && response.data) {
+        // Store client info in localStorage
+        localStorage.setItem('isAuthenticated', 'true');
+        localStorage.setItem('userRole', 'client');
+        localStorage.setItem('userName', response.data.name || response.data.first_name + ' ' + response.data.last_name);
+        localStorage.setItem('userEmail', email);
+        localStorage.setItem('userId', response.data.id || 'CLT-' + Math.random());
+        localStorage.setItem('clientId', response.data.id || '');
+        
+        toast.success('Welcome back!');
+        navigate('/client/dashboard');
+      } else {
+        toast.error(response.message || 'Invalid credentials');
+      }
+    } catch (error) {
+      console.error('Login error:', error);
+      toast.error('Failed to login. Please check your credentials.');
+    } finally {
       setIsLoading(false);
-    }, 1000);
+    }
   };
   
   return (

@@ -7,6 +7,7 @@ import { Label } from '../../components/ui/label';
 import { Card } from '../../components/ui/card';
 import { toast } from 'sonner';
 import { motion } from 'motion/react';
+import { authAPI } from '../../../services/api';
 
 export default function ClientRegister() {
   const navigate = useNavigate();
@@ -67,18 +68,41 @@ export default function ClientRegister() {
     
     setIsLoading(true);
     
-    // Simulate API call
-    setTimeout(() => {
-      localStorage.setItem('isAuthenticated', 'true');
-      localStorage.setItem('userRole', 'client');
-      localStorage.setItem('userName', formData.fullName);
-      localStorage.setItem('userEmail', formData.email);
-      localStorage.setItem('userId', 'CLT-' + Math.floor(Math.random() * 10000));
+    try {
+      // Parse full name into first and last name
+      const nameParts = formData.fullName.trim().split(' ');
+      const firstName = nameParts[0];
+      const lastName = nameParts.length > 1 ? nameParts.slice(1).join(' ') : '';
       
-      toast.success('Account created successfully! Welcome to Ambiance Studio!');
-      navigate('/client/dashboard');
+      // Register client via API
+      const response = await authAPI.clientRegister(
+        firstName,
+        lastName,
+        formData.email,
+        formData.phone,
+        formData.password
+      );
+      
+      if (response.success && response.data) {
+        // Store client info in localStorage
+        localStorage.setItem('isAuthenticated', 'true');
+        localStorage.setItem('userRole', 'client');
+        localStorage.setItem('userName', formData.fullName);
+        localStorage.setItem('userEmail', formData.email);
+        localStorage.setItem('userId', response.data.id || 'CLT-' + Math.floor(Math.random() * 10000));
+        localStorage.setItem('clientId', response.data.id || '');
+        
+        toast.success('Account created successfully! Welcome to Ambiance Studio!');
+        navigate('/client/dashboard');
+      } else {
+        toast.error(response.message || 'Failed to create account');
+      }
+    } catch (error) {
+      console.error('Registration error:', error);
+      toast.error('Failed to create account. Please try again.');
+    } finally {
       setIsLoading(false);
-    }, 1500);
+    }
   };
   
   return (

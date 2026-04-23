@@ -147,15 +147,29 @@ router.post('/client-register', async (req, res) => {
 
     const connection = await getDBPool().getConnection();
     try {
-      await connection.execute(
+      const [result] = await connection.execute(
         'INSERT INTO clients (first_name, last_name, email, phone, password, status) VALUES (?, ?, ?, ?, ?, ?)',
         [firstName, lastName, email, phone, password, 'active']
+      );
+      
+      // Fetch the created client
+      const [newClient] = await connection.execute(
+        'SELECT id, first_name, last_name, email, phone, status FROM clients WHERE id = ?',
+        [result.insertId]
       );
       connection.release();
 
       res.status(201).json({
         success: true,
-        message: 'Client registered successfully'
+        message: 'Client registered successfully',
+        data: {
+          id: newClient[0].id,
+          firstName: newClient[0].first_name,
+          lastName: newClient[0].last_name,
+          email: newClient[0].email,
+          phone: newClient[0].phone,
+          status: newClient[0].status
+        }
       });
     } catch (err) {
       connection.release();
