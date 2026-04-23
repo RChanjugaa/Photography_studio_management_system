@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router';
-import { Search, Plus, Edit, Trash2, Eye, EyeOff, UserCheck, UserX, Mail, Phone, Calendar, X, Shield, ShieldCheck } from 'lucide-react';
+import { Search, Plus, Edit, Trash2, Eye, EyeOff, UserCheck, UserX, Mail, Phone, Calendar, X, Shield, ShieldCheck, Printer } from 'lucide-react';
 import { Button } from '../../components/ui/button';
 import { Input } from '../../components/ui/input';
 import { Label } from '../../components/ui/label';
@@ -11,6 +11,7 @@ import { toast } from 'sonner';
 import { motion, AnimatePresence } from 'motion/react';
 import AdminNavigation from '../../components/AdminNavigation';
 import { clientsAPI } from '../../../services/api';
+import { format } from 'date-fns';
 
 // Mock client data
 const mockClients = [
@@ -230,6 +231,307 @@ export default function AdminClients() {
     toast.success('Client status updated');
   };
 
+  const handlePrintClient = (client: any) => {
+    const documentDate = format(new Date(), 'MMMM dd, yyyy');
+    const registrationDate = format(new Date(client.registrationDate), 'MMMM dd, yyyy');
+
+    const printContent = `
+      <!DOCTYPE html>
+      <html>
+      <head>
+        <title>Client Profile - ${client.firstName} ${client.lastName}</title>
+        <style>
+          * { margin: 0; padding: 0; box-sizing: border-box; }
+          body { font-family: Georgia, serif; color: #1a1a1a; background: white; }
+          
+          .page { 
+            width: 210mm; 
+            min-height: 297mm; 
+            padding: 0;
+            margin: 0 auto;
+            position: relative;
+          }
+
+          /* Header wave - top */
+          .header {
+            background: linear-gradient(135deg, #1a1a1a 0%, #2d2d2d 50%, #c9a84c 100%);
+            padding: 30px 50px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            clip-path: ellipse(100% 100% at 50% 0%);
+            padding-bottom: 50px;
+          }
+
+          .logo-section { color: white; }
+          .logo-text { 
+            font-size: 36px; 
+            font-style: italic; 
+            color: #c9a84c;
+            font-family: 'Palatino Linotype', Georgia, serif;
+          }
+          .tagline { 
+            font-size: 11px; 
+            color: #d4b896; 
+            letter-spacing: 2px;
+            text-transform: uppercase;
+            margin-top: 4px;
+          }
+
+          .contact-section { text-align: right; color: white; font-size: 11px; }
+          .contact-section p { margin: 3px 0; color: #d4d4d4; }
+
+          /* Content */
+          .content { padding: 40px 50px; }
+
+          .profile-title {
+            text-align: center;
+            font-size: 22px;
+            letter-spacing: 4px;
+            text-transform: uppercase;
+            color: #1a1a1a;
+            border-bottom: 2px solid #c9a84c;
+            border-top: 2px solid #c9a84c;
+            padding: 12px 0;
+            margin-bottom: 35px;
+          }
+
+          .doc-meta {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 30px;
+            font-size: 12px;
+          }
+          .doc-meta div { color: #555; }
+          .doc-meta strong { color: #1a1a1a; }
+
+          .section {
+            margin-bottom: 25px;
+            border: 1px solid #e8e0d0;
+            border-radius: 4px;
+            overflow: hidden;
+          }
+          .section-header {
+            background: linear-gradient(90deg, #1a1a1a, #2d2d2d);
+            color: #c9a84c;
+            padding: 10px 20px;
+            font-size: 12px;
+            letter-spacing: 2px;
+            text-transform: uppercase;
+          }
+          .section-body { padding: 20px; }
+
+          .grid-2 {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+          }
+          .grid-3 {
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr;
+            gap: 15px;
+          }
+          .field label {
+            font-size: 10px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            color: #888;
+            display: block;
+            margin-bottom: 4px;
+          }
+          .field span {
+            font-size: 13px;
+            color: #1a1a1a;
+            font-weight: 600;
+          }
+
+          .stats-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr;
+            gap: 15px;
+            margin-bottom: 25px;
+          }
+          .stat-box {
+            background: linear-gradient(135deg, #1a1a1a, #2d2d2d);
+            color: white;
+            padding: 15px 20px;
+            border-radius: 4px;
+            text-align: center;
+          }
+          .stat-label { font-size: 11px; color: #d4d4d4; letter-spacing: 1px; }
+          .stat-value { font-size: 24px; color: #c9a84c; font-weight: bold; margin-top: 5px; }
+
+          /* Total box */
+          .total-box {
+            background: linear-gradient(135deg, #1a1a1a, #2d2d2d);
+            color: white;
+            padding: 20px 30px;
+            border-radius: 4px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 30px;
+          }
+          .total-label { font-size: 13px; color: #d4d4d4; letter-spacing: 1px; }
+          .total-amount { font-size: 28px; color: #c9a84c; font-weight: bold; }
+
+          .status-badge {
+            display: inline-block;
+            padding: 6px 12px;
+            border-radius: 4px;
+            font-size: 11px;
+            font-weight: bold;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+          }
+          .status-active { background: #198754; color: white; }
+          .status-inactive { background: #6c757d; color: white; }
+          .status-pending { background: #ffc107; color: #1a1a1a; }
+
+          /* Footer wave */
+          .footer {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background: linear-gradient(135deg, #c9a84c 0%, #2d2d2d 50%, #1a1a1a 100%);
+            padding: 20px 50px;
+            clip-path: ellipse(100% 100% at 50% 100%);
+            padding-top: 40px;
+            text-align: center;
+          }
+          .footer-links { display: flex; justify-content: center; gap: 40px; }
+          .footer-links span { color: #d4b896; font-size: 11px; }
+
+          @media print {
+            body { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+            .page { width: 100%; }
+          }
+        </style>
+      </head>
+      <body>
+        <div class="page">
+          <!-- Header -->
+          <div class="header">
+            <div class="logo-section">
+              <div class="logo-text">Ambiance</div>
+              <div class="tagline">Photography Studio</div>
+            </div>
+            <div class="contact-section">
+              <p>7, 2 Charlemont Rd, Colombo</p>
+              <p>+94779774518</p>
+              <p>www.ambiance.lk</p>
+            </div>
+          </div>
+
+          <!-- Content -->
+          <div class="content">
+            <div class="profile-title">Client Profile Report</div>
+
+            <!-- Document meta -->
+            <div class="doc-meta">
+              <div><strong>Document Date:</strong> ${documentDate}</div>
+              <div><strong>Client ID:</strong> CLT-${client.id}</div>
+              <div><strong>Status:</strong> <span class="status-badge status-${client.status}">${client.status.toUpperCase()}</span></div>
+            </div>
+
+            <!-- Client Information -->
+            <div class="section">
+              <div class="section-header">Client Information</div>
+              <div class="section-body">
+                <div class="grid-2">
+                  <div class="field">
+                    <label>First Name</label>
+                    <span>${client.firstName}</span>
+                  </div>
+                  <div class="field">
+                    <label>Last Name</label>
+                    <span>${client.lastName}</span>
+                  </div>
+                  <div class="field">
+                    <label>Email Address</label>
+                    <span>${client.email}</span>
+                  </div>
+                  <div class="field">
+                    <label>Phone Number</label>
+                    <span>${client.phone || 'N/A'}</span>
+                  </div>
+                  <div class="field">
+                    <label>Registration Date</label>
+                    <span>${registrationDate}</span>
+                  </div>
+                  <div class="field">
+                    <label>Last Login</label>
+                    <span>${client.lastLogin ? format(new Date(client.lastLogin), 'MMMM dd, yyyy') : 'Never'}</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Client Statistics -->
+            <div class="stats-grid">
+              <div class="stat-box">
+                <div class="stat-label">Total Bookings</div>
+                <div class="stat-value">${client.totalBookings}</div>
+              </div>
+              <div class="stat-box">
+                <div class="stat-label">Total Spent</div>
+                <div class="stat-value">Rs. ${client.totalSpent.toLocaleString()}</div>
+              </div>
+              <div class="stat-box">
+                <div class="stat-label">Account Status</div>
+                <div class="stat-value" style="font-size: 12px;">${client.status.toUpperCase()}</div>
+              </div>
+            </div>
+
+            <!-- Verification Status -->
+            <div class="section">
+              <div class="section-header">Account Verification</div>
+              <div class="section-body">
+                <div class="grid-2">
+                  <div class="field">
+                    <label>Email Verified</label>
+                    <span>${client.emailVerified ? '✓ Yes' : '✗ No'}</span>
+                  </div>
+                  <div class="field">
+                    <label>Profile Complete</label>
+                    <span>${client.profileComplete ? '✓ Yes' : '✗ No'}</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Summary -->
+            <div class="total-box">
+              <div class="total-label">CLIENT ACCOUNT SUMMARY</div>
+              <div class="total-amount">${client.status.charAt(0).toUpperCase() + client.status.slice(1)}</div>
+            </div>
+          </div>
+
+          <!-- Footer -->
+          <div class="footer">
+            <div class="footer-links">
+              <span>ambiance.lk</span>
+              <span>www.ambiance.lk</span>
+              <span>studioambiance.lk</span>
+            </div>
+          </div>
+        </div>
+      </body>
+      </html>
+    `;
+
+    const printWindow = window.open('', '_blank');
+    if (printWindow) {
+      printWindow.document.write(printContent);
+      printWindow.document.close();
+      printWindow.focus();
+      setTimeout(() => {
+        printWindow.print();
+      }, 500);
+    }
+  };
+
   const getStatusBadge = (status: string) => {
     switch (status) {
       case 'active':
@@ -414,6 +716,14 @@ export default function AdminClients() {
                       </td>
                       <td className="px-6 py-4">
                         <div className="flex items-center gap-2">
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            onClick={() => handlePrintClient(client)}
+                            className="border-yellow-600 text-yellow-400 hover:bg-yellow-600/10"
+                          >
+                            <Printer className="size-4" />
+                          </Button>
                           <Button
                             size="sm"
                             variant="outline"
