@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router';
-import { Search, Plus, Edit, Trash2, Eye, EyeOff, DollarSign, Calendar, User, X } from 'lucide-react';
+import { Search, Plus, Edit, Trash2, Eye, EyeOff, DollarSign, Calendar, User, X, Printer } from 'lucide-react';
 import { Button } from '../../components/ui/button';
 import { Input } from '../../components/ui/input';
 import { Label } from '../../components/ui/label';
@@ -12,6 +12,7 @@ import { toast } from 'sonner';
 import { motion, AnimatePresence } from 'motion/react';
 import AdminNavigation from '../../components/AdminNavigation';
 import { employeesAPI } from '../../../services/api';
+import { format } from 'date-fns';
 
 // Mock employee data
 const mockEmployees = [
@@ -273,6 +274,292 @@ export default function AdminEmployees() {
     }
   };
 
+  const handlePrintEmployee = (employee: any) => {
+    const documentDate = format(new Date(), 'MMMM dd, yyyy');
+    const joinDate = format(new Date(employee.joinDate), 'MMMM dd, yyyy');
+
+    const printContent = `
+      <!DOCTYPE html>
+      <html>
+      <head>
+        <title>Employee Profile - ${employee.firstName} ${employee.lastName}</title>
+        <style>
+          * { margin: 0; padding: 0; box-sizing: border-box; }
+          body { font-family: Georgia, serif; color: #1a1a1a; background: white; }
+          
+          .page { 
+            width: 210mm; 
+            min-height: 297mm; 
+            padding: 0;
+            margin: 0 auto;
+            position: relative;
+          }
+
+          /* Header wave - top */
+          .header {
+            background: linear-gradient(135deg, #1a1a1a 0%, #2d2d2d 50%, #c9a84c 100%);
+            padding: 30px 50px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            clip-path: ellipse(100% 100% at 50% 0%);
+            padding-bottom: 50px;
+          }
+
+          .logo-section { color: white; }
+          .logo-text { 
+            font-size: 36px; 
+            font-style: italic; 
+            color: #c9a84c;
+            font-family: 'Palatino Linotype', Georgia, serif;
+          }
+          .tagline { 
+            font-size: 11px; 
+            color: #d4b896; 
+            letter-spacing: 2px;
+            text-transform: uppercase;
+            margin-top: 4px;
+          }
+
+          .contact-section { text-align: right; color: white; font-size: 11px; }
+          .contact-section p { margin: 3px 0; color: #d4d4d4; }
+
+          /* Content */
+          .content { padding: 40px 50px; }
+
+          .profile-title {
+            text-align: center;
+            font-size: 22px;
+            letter-spacing: 4px;
+            text-transform: uppercase;
+            color: #1a1a1a;
+            border-bottom: 2px solid #c9a84c;
+            border-top: 2px solid #c9a84c;
+            padding: 12px 0;
+            margin-bottom: 35px;
+          }
+
+          .doc-meta {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 30px;
+            font-size: 12px;
+          }
+          .doc-meta div { color: #555; }
+          .doc-meta strong { color: #1a1a1a; }
+
+          .section {
+            margin-bottom: 25px;
+            border: 1px solid #e8e0d0;
+            border-radius: 4px;
+            overflow: hidden;
+          }
+          .section-header {
+            background: linear-gradient(90deg, #1a1a1a, #2d2d2d);
+            color: #c9a84c;
+            padding: 10px 20px;
+            font-size: 12px;
+            letter-spacing: 2px;
+            text-transform: uppercase;
+          }
+          .section-body { padding: 20px; }
+
+          .grid-2 {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+          }
+          .grid-3 {
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr;
+            gap: 15px;
+          }
+          .field label {
+            font-size: 10px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            color: #888;
+            display: block;
+            margin-bottom: 4px;
+          }
+          .field span {
+            font-size: 13px;
+            color: #1a1a1a;
+            font-weight: 600;
+          }
+
+          .stats-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr;
+            gap: 15px;
+            margin-bottom: 25px;
+          }
+          .stat-box {
+            background: linear-gradient(135deg, #1a1a1a, #2d2d2d);
+            color: white;
+            padding: 15px 20px;
+            border-radius: 4px;
+            text-align: center;
+          }
+          .stat-label { font-size: 11px; color: #d4d4d4; letter-spacing: 1px; }
+          .stat-value { font-size: 24px; color: #c9a84c; font-weight: bold; margin-top: 5px; }
+
+          .status-badge {
+            display: inline-block;
+            padding: 6px 12px;
+            border-radius: 4px;
+            font-size: 11px;
+            font-weight: 600;
+            letter-spacing: 1px;
+            text-transform: uppercase;
+          }
+          .status-active {
+            background: #d4f1d4;
+            color: #1a5c1a;
+          }
+          .status-inactive {
+            background: #e8e8e8;
+            color: #555;
+          }
+
+          .footer {
+            text-align: center;
+            border-top: 1px solid #c9a84c;
+            margin-top: 40px;
+            padding-top: 20px;
+            color: #888;
+            font-size: 10px;
+          }
+
+          @media print {
+            body { margin: 0; padding: 0; }
+            .page { margin: 0; }
+          }
+        </style>
+      </head>
+      <body>
+        <div class="page">
+          <div class="header">
+            <div class="logo-section">
+              <div class="logo-text">AMBIANCE</div>
+              <div class="tagline">Photography Studio</div>
+            </div>
+            <div class="contact-section">
+              <p>+94 702 123 456</p>
+              <p>info@ambiance.lk</p>
+            </div>
+          </div>
+
+          <div class="content">
+            <div class="profile-title">EMPLOYEE PROFILE REPORT</div>
+
+            <div class="doc-meta">
+              <div>Generated Date: <strong>${documentDate}</strong></div>
+              <div>Employee ID: <strong>EMP-${employee.id}</strong></div>
+            </div>
+
+            <!-- Personal Information Section -->
+            <div class="section">
+              <div class="section-header">PERSONAL INFORMATION</div>
+              <div class="section-body">
+                <div class="grid-2">
+                  <div class="field">
+                    <label>First Name</label>
+                    <span>${employee.firstName}</span>
+                  </div>
+                  <div class="field">
+                    <label>Last Name</label>
+                    <span>${employee.lastName}</span>
+                  </div>
+                  <div class="field">
+                    <label>Email Address</label>
+                    <span>${employee.email}</span>
+                  </div>
+                  <div class="field">
+                    <label>Phone Number</label>
+                    <span>${employee.phone}</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Employment Details Section -->
+            <div class="section">
+              <div class="section-header">EMPLOYMENT DETAILS</div>
+              <div class="section-body">
+                <div class="grid-2">
+                  <div class="field">
+                    <label>Role</label>
+                    <span>${employee.role}</span>
+                  </div>
+                  <div class="field">
+                    <label>Status</label>
+                    <span><div class="status-badge status-${employee.status}">${employee.status.toUpperCase()}</div></span>
+                  </div>
+                  <div class="field">
+                    <label>Join Date</label>
+                    <span>${joinDate}</span>
+                  </div>
+                  <div class="field">
+                    <label>Last Login</label>
+                    <span>${employee.lastLogin || 'N/A'}</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Professional Details Section -->
+            <div class="section">
+              <div class="section-header">PROFESSIONAL DETAILS</div>
+              <div class="section-body">
+                <div class="field">
+                  <label>Bio</label>
+                  <span>${employee.bio || 'No bio provided'}</span>
+                </div>
+                <div class="field" style="margin-top: 15px;">
+                  <label>Specialties</label>
+                  <span>${employee.specialties && employee.specialties.length > 0 ? employee.specialties.join(', ') : 'No specialties listed'}</span>
+                </div>
+              </div>
+            </div>
+
+            <!-- Compensation Section -->
+            <div class="section">
+              <div class="section-header">COMPENSATION</div>
+              <div class="section-body">
+                <div class="grid-2">
+                  <div class="field">
+                    <label>Base Salary</label>
+                    <span>Rs. ${(employee.baseSalary || 0).toLocaleString('en-LK')}</span>
+                  </div>
+                  <div class="field">
+                    <label>Visibility</label>
+                    <span>${employee.visiblePublic ? 'Public Profile' : 'Private Profile'}</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div class="footer">
+              <p>This is an official employee profile report from Ambiance Photography Studio</p>
+              <p>Report Generated: ${new Date().toLocaleString()}</p>
+            </div>
+          </div>
+        </div>
+      </body>
+      </html>
+    `;
+
+    const printWindow = window.open('', '', 'width=800,height=600');
+    if (printWindow) {
+      printWindow.document.write(printContent);
+      printWindow.document.close();
+      setTimeout(() => {
+        printWindow.print();
+      }, 250);
+    }
+  };
+
   const handleManageSalary = (employee: any) => {
     setCurrentEmployee(employee);
     setSalaryForm({
@@ -449,6 +736,14 @@ export default function AdminEmployees() {
                       <td className="px-6 py-4 text-gray-400 text-sm">{employee.lastLogin}</td>
                       <td className="px-6 py-4">
                         <div className="flex items-center justify-end gap-2">
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => handlePrintEmployee(employee)}
+                            className="border-yellow-600 text-yellow-500 hover:bg-yellow-600/10"
+                          >
+                            <Printer className="size-4" />
+                          </Button>
                           <Button
                             variant="outline"
                             size="sm"
