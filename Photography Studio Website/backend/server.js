@@ -12,8 +12,9 @@ const PORT = process.env.PORT || 5000;
 
 // Middleware
 app.use(cors());
-app.use(bodyParser.json());
-app.use(bodyParser.urlencoded({ extended: true }));
+// Increase body size limit to 100MB for base64 image uploads
+app.use(express.json({ limit: '100mb' }));
+app.use(express.urlencoded({ limit: '100mb', extended: true }));
 
 // Global error handler
 app.use((err, req, res, next) => {
@@ -209,15 +210,135 @@ const createTables = async () => {
     await connection.execute(`
       CREATE TABLE IF NOT EXISTS gallery (
         id INT AUTO_INCREMENT PRIMARY KEY,
-        booking_id INT NOT NULL,
-        image_url VARCHAR(500) NOT NULL,
+        booking_id INT,
+        employee_id INT,
+        image_url LONGTEXT NOT NULL,
         image_type ENUM('photo', 'video', 'thumbnail') DEFAULT 'photo',
+        description TEXT,
+        uploaded_by INT NOT NULL,
+        upload_date DATETIME DEFAULT CURRENT_TIMESTAMP,
         uploaded_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-        FOREIGN KEY (booking_id) REFERENCES bookings(id) ON DELETE CASCADE,
-        INDEX idx_booking_id (booking_id)
+        FOREIGN KEY (booking_id) REFERENCES bookings(id) ON DELETE SET NULL,
+        FOREIGN KEY (employee_id) REFERENCES employees(id) ON DELETE SET NULL,
+        FOREIGN KEY (uploaded_by) REFERENCES admin_users(id) ON DELETE CASCADE,
+        INDEX idx_booking_id (booking_id),
+        INDEX idx_employee_id (employee_id),
+        INDEX idx_upload_date (upload_date)
       )
     `);
+
+    // Ensure booking_id is nullable (photos can be uploaded without a booking)
+    try {
+      await connection.execute(`
+        ALTER TABLE gallery MODIFY COLUMN booking_id INT NULL
+      `);
+      console.log('✓ Updated booking_id column to allow NULL values');
+    } catch (err) {
+      if (err.message.includes('Duplicate') || err.message.includes('already')) {
+        console.log('  booking_id already nullable');
+      } else {
+        console.log('  Note:', err.message);
+      }
+    }
+
+    // Ensure image_url column is large enough for base64 images
+    try {
+      await connection.execute(`
+        ALTER TABLE gallery MODIFY COLUMN image_url LONGTEXT NOT NULL
+      `);
+      console.log('✓ Updated image_url column to LONGTEXT for base64 support');
+    } catch (err) {
+      if (err.message.includes('Duplicate') || err.message.includes('already')) {
+        console.log('  image_url column already optimized');
+      } else {
+        console.log('  Note:', err.message);
+      }
+    }
+    try {
+      await connection.execute(`
+        ALTER TABLE gallery ADD COLUMN employee_id INT DEFAULT NULL
+      `);
+      console.log('✓ Added employee_id column to gallery table');
+    } catch (err) {
+      if (err.message.includes('Duplicate column name')) {
+        console.log('  employee_id column already exists');
+      } else {
+        console.log('  Note: Could not add employee_id column:', err.message);
+      }
+    }
+
+    // Ensure upload_date column exists
+    try {
+      await connection.execute(`
+        ALTER TABLE gallery ADD COLUMN upload_date DATETIME DEFAULT CURRENT_TIMESTAMP
+      `);
+      console.log('✓ Added upload_date column to gallery table');
+    } catch (err) {
+      if (err.message.includes('Duplicate column name')) {
+        console.log('  upload_date column already exists');
+      } else {
+        console.log('  Note: Could not add upload_date column:', err.message);
+      }
+    }
+
+    // Ensure description column exists
+    try {
+      await connection.execute(`
+        ALTER TABLE gallery ADD COLUMN description TEXT DEFAULT NULL
+      `);
+      console.log('✓ Added description column to gallery table');
+    } catch (err) {
+      if (err.message.includes('Duplicate column name')) {
+        console.log('  description column already exists');
+      } else {
+        console.log('  Note: Could not add description column:', err.message);
+      }
+    }
+
+    // Ensure uploaded_by column exists
+    try {
+      await connection.execute(`
+        ALTER TABLE gallery ADD COLUMN uploaded_by INT NOT NULL DEFAULT 1
+      `);
+      console.log('✓ Added uploaded_by column to gallery table');
+    } catch (err) {
+      if (err.message.includes('Duplicate column name')) {
+        console.log('  uploaded_by column already exists');
+      } else {
+        console.log('  Note: Could not add uploaded_by column:', err.message);
+      }
+    }
+
+    // Add foreign key for employee_id if it doesn't exist
+    try {
+      await connection.execute(`
+        ALTER TABLE gallery ADD CONSTRAINT fk_gallery_employee_id 
+        FOREIGN KEY (employee_id) REFERENCES employees(id) ON DELETE SET NULL
+      `);
+      console.log('✓ Added employee_id foreign key to gallery table');
+    } catch (err) {
+      if (err.message.includes('Duplicate') || err.message.includes('already exists')) {
+        console.log('  employee_id foreign key already exists');
+      } else {
+        console.log('  Note: Could not add employee_id FK:', err.message);
+      }
+    }
+
+    // Add foreign key for uploaded_by if it doesn't exist
+    try {
+      await connection.execute(`
+        ALTER TABLE gallery ADD CONSTRAINT fk_gallery_uploaded_by 
+        FOREIGN KEY (uploaded_by) REFERENCES admin_users(id) ON DELETE CASCADE
+      `);
+      console.log('✓ Added uploaded_by foreign key to gallery table');
+    } catch (err) {
+      if (err.message.includes('Duplicate') || err.message.includes('already exists')) {
+        console.log('  uploaded_by foreign key already exists');
+      } else {
+        console.log('  Note: Could not add uploaded_by FK:', err.message);
+      }
+    }
 
     // Feedback table
     await connection.execute(`

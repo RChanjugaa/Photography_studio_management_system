@@ -25,7 +25,7 @@ export default function AdminNavigation() {
     { path: '/admin/employees', label: 'Employees', icon: Users },
     { path: '/admin/events', label: 'Events', icon: Calendar },
     { path: '/admin/payments', label: 'Payments', icon: DollarSign },
-    { path: '/gallery', label: 'Galleries', icon: Image },
+    { path: '/admin/gallery', label: 'Gallery', icon: Image },
   ];
   
   const isActive = (path: string) => location.pathname === path;

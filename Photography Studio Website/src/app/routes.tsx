@@ -37,6 +37,7 @@ import AdminPayments from "./pages/admin/AdminPayments";
 import AdminInvoiceDetail from "./pages/admin/AdminInvoiceDetail";
 import AdminFinanceReports from "./pages/admin/AdminFinanceReports";
 import AdminGalleryReports from "./pages/admin/AdminGalleryReports";
+import AdminGallery from "./pages/admin/AdminGallery";
 import GalleriesList from "./pages/gallery/GalleriesList";
 import GalleryView from "./pages/gallery/GalleryView";
 import GalleryUpload from "./pages/gallery/GalleryUpload";
@@ -79,6 +80,7 @@ const router = createBrowserRouter([
       // Admin routes
       { path: "admin/employees", element: <AdminEmployees /> },
       { path: "admin/clients", element: <AdminClients /> },
+      { path: "admin/gallery", element: <AdminGallery /> },
       { path: "admin/login", element: <AdminLogin /> },
       { path: "admin/dashboard", element: <AdminDashboard /> },
       { path: "admin/events", element: <AdminEventManagement /> },
