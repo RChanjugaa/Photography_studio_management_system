@@ -345,7 +345,7 @@ GET  /admin/employees       → Employee Management Console
 
 ---
 
-## 🔑 Authentication Guide
+##  Authentication Guide
 
 ### **Mock Login System (Current Implementation)**
 
