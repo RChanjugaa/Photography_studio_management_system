@@ -1,12 +1,12 @@
 # Payment & Invoice Management - Complete Guide
 
-## 🎯 Overview
+##  Overview
 
 The Ambiance Photography Studio Payment & Invoice Management System provides comprehensive financial tracking, payment recording, invoice generation, and financial reporting capabilities.
 
 ---
 
-## 📋 Table of Contents
+##  Table of Contents
 
 1. [System Architecture](#system-architecture)
 2. [Access Levels](#access-levels)
@@ -17,7 +17,7 @@ The Ambiance Photography Studio Payment & Invoice Management System provides com
 
 ---
 
-## 🏗️ System Architecture
+##  System Architecture
 
 ### **Financial Management Flow:**
 
@@ -50,21 +50,21 @@ The Ambiance Photography Studio Payment & Invoice Management System provides com
 
 ---
 
-## 🔐 Access Levels
+##  Access Levels
 
 ### **ADMIN ONLY (Full Access)**
 
 **What They Can Do:**
-- ✅ Record payments
-- ✅ Generate invoices
-- ✅ View all financial data
-- ✅ Download invoice PDFs
-- ✅ Share invoice links with clients
-- ✅ Mark invoices as paid
-- ✅ View financial reports
-- ✅ Export financial data
-- ✅ Track outstanding balances
-- ✅ Manage invoice status
+-  Record payments
+-  Generate invoices
+-  View all financial data
+-  Download invoice PDFs
+-  Share invoice links with clients
+-  Mark invoices as paid
+-  View financial reports
+-  Export financial data
+-  Track outstanding balances
+-  Manage invoice status
 
 **Protected Features:**
 - All payment and invoice features require admin authentication
@@ -72,11 +72,11 @@ The Ambiance Photography Studio Payment & Invoice Management System provides com
 
 ---
 
-## 🚀 How to Access
+##  How to Access
 
 ### **Admin Payment Management**
 
-**Option 1: Login & Navigate** ⭐ **RECOMMENDED**
+**Option 1: Login & Navigate**  **RECOMMENDED**
 1. Visit `http://localhost:5173/admin/login`
 2. Enter any email (e.g., `admin@ambiance.lk`)
 3. Enter any password
@@ -102,9 +102,9 @@ localStorage.setItem('userEmail', 'admin@ambiance.lk');
 
 ---
 
-## ✨ Feature Breakdown
+##  Feature Breakdown
 
-### **📊 Admin Payments & Invoices** (`/admin/payments`)
+### ** Admin Payments & Invoices** (`/admin/payments`)
 
 #### **Dashboard Statistics**
 
@@ -174,12 +174,12 @@ localStorage.setItem('userEmail', 'admin@ambiance.lk');
 - **Actions** - View & Download buttons
 
 **Status Types:**
-- 🔵 **Draft** - Not yet finalized
-- 🟡 **Unpaid** - Awaiting payment
-- 🟠 **Partial** - Partially paid
-- 🟢 **Paid** - Fully paid
-- 🔴 **Overdue** - Past due date
-- ⚫ **Void** - Cancelled
+-  **Draft** - Not yet finalized
+-  **Unpaid** - Awaiting payment
+-  **Partial** - Partially paid
+-  **Paid** - Fully paid
+-  **Overdue** - Past due date
+-  **Void** - Cancelled
 
 ---
 
@@ -217,7 +217,7 @@ localStorage.setItem('userEmail', 'admin@ambiance.lk');
 
 ---
 
-### **📄 Invoice Detail Viewer** (`/admin/invoices/:invoiceId`)
+### ** Invoice Detail Viewer** (`/admin/invoices/:invoiceId`)
 
 #### **Professional Invoice Layout**
 
@@ -268,7 +268,7 @@ Tax:                 Rs. 0
 Total:               Rs. 150,000
 Payments Received:   Rs. 50,000
 ─────────────────────────────────
-Outstanding:         Rs. 100,000 ⚠️
+Outstanding:         Rs. 100,000 
 ```
 
 ---
@@ -290,18 +290,18 @@ Outstanding:         Rs. 100,000 ⚠️
 #### **Action Buttons:**
 
 **Top Right:**
-1. **Download PDF** 📥
+1. **Download PDF** 
    - Generates printable invoice
    - A4 portrait format
    - Professional layout
    
-2. **Share** 🔗
+2. **Share** 
    - Opens share modal
    - Generates public link
    - Copy to clipboard
    - 30-day expiry
    
-3. **Mark as Paid** ✅
+3. **Mark as Paid** 
    - Only shows if outstanding > 0
    - Updates status to "Paid"
    - Records full payment
@@ -324,7 +324,7 @@ https://ambiance.lk/invoices/public/INV-2024-001
 
 ---
 
-### **📈 Finance Reports Dashboard** (`/admin/reports/finance`)
+### ** Finance Reports Dashboard** (`/admin/reports/finance`)
 
 #### **Header Controls:**
 
@@ -440,7 +440,7 @@ https://ambiance.lk/invoices/public/INV-2024-001
 
 ---
 
-## 🗺️ Routes Reference
+##  Routes Reference
 
 ### **Admin Routes (Admin Auth Required)**
 ```
@@ -451,7 +451,7 @@ GET  /admin/reports/finance       → Finance Reports Dashboard
 
 ---
 
-## 📊 Business Logic
+##  Business Logic
 
 ### **Invoice Status Auto-Update Rules:**
 
@@ -505,8 +505,8 @@ Invoice Total:     Rs. 100,000
 Already Paid:      Rs. 60,000
 Outstanding:       Rs. 40,000
 
-❌ Cannot record:  Rs. 50,000
-✅ Can record:     Rs. 40,000 or less
+ Cannot record:  Rs. 50,000
+ Can record:     Rs. 40,000 or less
 ```
 
 ---
@@ -522,7 +522,7 @@ Outstanding:       Rs. 40,000
 
 ---
 
-## 🎨 Design Features
+##  Design Features
 
 ### **Currency Format:**
 - **Currency:** Sri Lankan Rupees (LKR)
@@ -555,23 +555,23 @@ Outstanding:       Rs. 40,000
 
 ---
 
-## 💡 Key Features
+##  Key Features
 
-✅ **Payment Recording** - Quick payment entry with validation  
-✅ **Invoice Generation** - Professional invoice creation  
-✅ **PDF Download** - Print-ready invoice format  
-✅ **Public Sharing** - Secure shareable links  
-✅ **Status Tracking** - Auto-updating payment status  
-✅ **Balance Calculation** - Real-time outstanding tracking  
-✅ **Financial Reports** - Comprehensive analytics  
-✅ **Chart Visualization** - Revenue trends and insights  
-✅ **Payment Methods** - Multiple payment options  
-✅ **Search & Filters** - Quick data access  
-✅ **Mobile Responsive** - Works on all devices  
+ **Payment Recording** - Quick payment entry with validation  
+ **Invoice Generation** - Professional invoice creation  
+ **PDF Download** - Print-ready invoice format  
+ **Public Sharing** - Secure shareable links  
+ **Status Tracking** - Auto-updating payment status  
+ **Balance Calculation** - Real-time outstanding tracking  
+ **Financial Reports** - Comprehensive analytics  
+ **Chart Visualization** - Revenue trends and insights  
+ **Payment Methods** - Multiple payment options  
+ **Search & Filters** - Quick data access  
+ **Mobile Responsive** - Works on all devices  
 
 ---
 
-## 🔄 Integration with Other Modules
+##  Integration with Other Modules
 
 ### **Bookings Integration:**
 - Payments link to booking IDs
@@ -590,7 +590,7 @@ Outstanding:       Rs. 40,000
 
 ---
 
-## 📝 Sample Data
+##  Sample Data
 
 ### **Invoice Example:**
 ```
@@ -624,7 +624,7 @@ Notes: Advance payment for wedding
 
 ---
 
-## 🚀 Next Steps (Backend Integration)
+##  Next Steps (Backend Integration)
 
 When ready to connect to real database:
 
@@ -651,7 +651,7 @@ When ready to connect to real database:
 
 ---
 
-## 📞 Support
+##  Support
 
 For questions or issues:
 - Check this guide first
@@ -661,4 +661,4 @@ For questions or issues:
 
 ---
 
-**Built with ❤️ for Ambiance Photography Studio**
+**Built with  for Ambiance Photography Studio**
