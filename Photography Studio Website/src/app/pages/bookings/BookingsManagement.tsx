@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router';
-import { Search, Calendar as CalendarIcon, Package, Plus, ChevronLeft, ChevronRight, Filter, Clock, BarChart3, TrendingUp, DollarSign, CheckCircle, Trash2, Edit } from 'lucide-react';
+import { Search, Calendar as CalendarIcon, Package, Plus, ChevronLeft, ChevronRight, Filter, Clock, BarChart3, TrendingUp, DollarSign, CheckCircle, Trash2, Edit, Printer } from 'lucide-react';
 import { Button } from '../../components/ui/button';
 import { Input } from '../../components/ui/input';
 import { Card } from '../../components/ui/card';
@@ -85,6 +85,64 @@ export default function BookingsManagement() {
     } catch (error) {
       console.error('Error updating status:', error);
       toast.error('Error updating booking status');
+    }
+  };
+
+  const handlePrint = (booking: any) => {
+    const clientName = `${booking.first_name || ''} ${booking.last_name || ''}`.trim() || booking.client_name || 'N/A';
+    const eventDate = booking.event_date ? new Date(booking.event_date).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' }) : 'N/A';
+    const bookingDate = booking.booking_date ? new Date(booking.booking_date).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' }) : new Date().toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' });
+
+    const printContent = `<!DOCTYPE html><html><head><title>Booking - ${booking.booking_number}</title>
+    <style>*{margin:0;padding:0;box-sizing:border-box;}body{font-family:Georgia,serif;color:#1a1a1a;background:white;}
+    .page{width:210mm;min-height:297mm;padding:0;margin:0 auto;position:relative;}
+    .header{background:linear-gradient(135deg,#1a1a1a 0%,#2d2d2d 50%,#c9a84c 100%);padding:30px 50px 50px;display:flex;justify-content:space-between;align-items:center;}
+    .logo-text{font-size:36px;font-style:italic;color:#c9a84c;font-family:'Palatino Linotype',Georgia,serif;}
+    .tagline{font-size:11px;color:#d4b896;letter-spacing:2px;text-transform:uppercase;margin-top:4px;}
+    .contact-section{text-align:right;color:white;font-size:11px;}.contact-section p{margin:3px 0;color:#d4d4d4;}
+    .content{padding:40px 50px;}
+    .title{text-align:center;font-size:22px;letter-spacing:4px;text-transform:uppercase;color:#1a1a1a;border-bottom:2px solid #c9a84c;border-top:2px solid #c9a84c;padding:12px 0;margin-bottom:35px;}
+    .meta{display:flex;justify-content:space-between;margin-bottom:30px;font-size:12px;color:#555;}
+    .meta strong{color:#1a1a1a;}
+    .section{margin-bottom:25px;border:1px solid #e8e0d0;border-radius:4px;overflow:hidden;}
+    .section-header{background:linear-gradient(90deg,#1a1a1a,#2d2d2d);color:#c9a84c;padding:10px 20px;font-size:12px;letter-spacing:2px;text-transform:uppercase;}
+    .section-body{padding:20px;}.grid-2{display:grid;grid-template-columns:1fr 1fr;gap:15px;}
+    .field label{font-size:10px;text-transform:uppercase;letter-spacing:1px;color:#888;display:block;margin-bottom:4px;}
+    .field span{font-size:13px;color:#1a1a1a;font-weight:600;}
+    .total-box{background:linear-gradient(135deg,#1a1a1a,#2d2d2d);color:white;padding:20px 30px;border-radius:4px;display:flex;justify-content:space-between;align-items:center;margin-bottom:30px;}
+    .total-label{font-size:13px;color:#d4d4d4;letter-spacing:1px;}.total-amount{font-size:28px;color:#c9a84c;font-weight:bold;}
+    .thank-you{text-align:center;color:#888;font-size:12px;font-style:italic;margin-bottom:20px;}
+    .footer{background:linear-gradient(135deg,#c9a84c 0%,#2d2d2d 50%,#1a1a1a 100%);padding:30px 50px;text-align:center;}
+    .footer span{color:#d4b896;font-size:11px;margin:0 20px;}
+    @media print{body{-webkit-print-color-adjust:exact;print-color-adjust:exact;}}</style></head>
+    <body><div class="page">
+    <div class="header"><div class="logo-section"><div class="logo-text">Ambiance</div><div class="tagline">Capturing Timeless Moments</div></div>
+    <div class="contact-section"><p>7, 2 Charlemont Rd, Colombo</p><p>+94779774518</p><p>www.ambiance.lk</p></div></div>
+    <div class="content"><div class="title">Booking Confirmation</div>
+    <div class="meta"><div><strong>Booking #:</strong> ${booking.booking_number || booking.id}</div><div><strong>Bill Date:</strong> ${bookingDate}</div><div><strong>Event Date:</strong> ${eventDate}</div></div>
+    <div class="section"><div class="section-header">Client Information</div><div class="section-body"><div class="grid-2">
+    <div class="field"><label>Full Name</label><span>${clientName}</span></div>
+    <div class="field"><label>Email</label><span>${booking.email || 'N/A'}</span></div>
+    <div class="field"><label>Phone</label><span>${booking.phone || 'N/A'}</span></div>
+    <div class="field"><label>Client ID</label><span>${booking.client_id || 'N/A'}</span></div>
+    </div></div></div>
+    <div class="section"><div class="section-header">Booking Details</div><div class="section-body"><div class="grid-2">
+    <div class="field"><label>Service Type</label><span>${booking.service_type || 'N/A'}</span></div>
+    <div class="field"><label>Event Time</label><span>${booking.event_time || 'N/A'}</span></div>
+    <div class="field"><label>Duration</label><span>${booking.duration_hours ? booking.duration_hours + ' hrs' : 'N/A'}</span></div>
+    <div class="field"><label>Status</label><span>${booking.status || 'pending'}</span></div>
+    </div></div></div>
+    <div class="total-box"><div class="total-label">TOTAL AMOUNT</div><div class="total-amount">LKR ${parseFloat(booking.amount || 0).toLocaleString()}</div></div>
+    <div class="thank-you">Thank you for choosing Ambiance. We look forward to capturing your timeless moments.</div>
+    </div><div class="footer"><span>ambiance.lk</span><span>+94779774518</span><span>studioambiance.lk</span></div>
+    </div></body></html>`;
+
+    const printWindow = window.open('', '_blank');
+    if (printWindow) {
+      printWindow.document.write(printContent);
+      printWindow.document.close();
+      printWindow.focus();
+      setTimeout(() => printWindow.print(), 500);
     }
   };
 
@@ -234,12 +292,12 @@ export default function BookingsManagement() {
                   <SelectTrigger className="w-full sm:w-40 bg-gray-900 border-gray-800 text-white">
                     <SelectValue placeholder="All Status" />
                   </SelectTrigger>
-                  <SelectContent className="bg-gray-900 border-gray-800">
-                    <SelectItem value="all">All Status</SelectItem>
-                    <SelectItem value="pending">Pending</SelectItem>
-                    <SelectItem value="confirmed">Confirmed</SelectItem>
-                    <SelectItem value="completed">Completed</SelectItem>
-                    <SelectItem value="cancelled">Cancelled</SelectItem>
+                  <SelectContent className="bg-gray-900 border-gray-800 text-white">
+                    <SelectItem value="all" className="text-white hover:bg-gray-800 focus:bg-gray-800 focus:text-white">All Status</SelectItem>
+                    <SelectItem value="pending" className="text-white hover:bg-gray-800 focus:bg-gray-800 focus:text-white">Pending</SelectItem>
+                    <SelectItem value="confirmed" className="text-white hover:bg-gray-800 focus:bg-gray-800 focus:text-white">Confirmed</SelectItem>
+                    <SelectItem value="completed" className="text-white hover:bg-gray-800 focus:bg-gray-800 focus:text-white">Completed</SelectItem>
+                    <SelectItem value="cancelled" className="text-white hover:bg-gray-800 focus:bg-gray-800 focus:text-white">Cancelled</SelectItem>
                   </SelectContent>
                 </Select>
 
@@ -247,12 +305,12 @@ export default function BookingsManagement() {
                   <SelectTrigger className="w-full sm:w-40 bg-gray-900 border-gray-800 text-white">
                     <SelectValue placeholder="All Types" />
                   </SelectTrigger>
-                  <SelectContent className="bg-gray-900 border-gray-800">
-                    <SelectItem value="all">All Types</SelectItem>
-                    <SelectItem value="Photography">Photography</SelectItem>
-                    <SelectItem value="Cinematography">Cinematography</SelectItem>
-                    <SelectItem value="DJ">DJ</SelectItem>
-                    <SelectItem value="Event Management">Event Management</SelectItem>
+                  <SelectContent className="bg-gray-900 border-gray-800 text-white">
+                    <SelectItem value="all" className="text-white hover:bg-gray-800 focus:bg-gray-800 focus:text-white">All Types</SelectItem>
+                    <SelectItem value="Photography" className="text-white hover:bg-gray-800 focus:bg-gray-800 focus:text-white">Photography</SelectItem>
+                    <SelectItem value="Cinematography" className="text-white hover:bg-gray-800 focus:bg-gray-800 focus:text-white">Cinematography</SelectItem>
+                    <SelectItem value="DJ" className="text-white hover:bg-gray-800 focus:bg-gray-800 focus:text-white">DJ</SelectItem>
+                    <SelectItem value="Event Management" className="text-white hover:bg-gray-800 focus:bg-gray-800 focus:text-white">Event Management</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
@@ -334,6 +392,9 @@ export default function BookingsManagement() {
                             </select>
                           </div>
                           <div className="col-span-1 text-right flex justify-end gap-1">
+                            <Button variant="ghost" size="sm" className="text-blue-400 hover:text-blue-300 hover:bg-blue-500/10" onClick={() => handlePrint(booking)} title="Print Booking">
+                              <Printer className="size-4" />
+                            </Button>
                             <Link to={`/admin/bookings/${booking.id}`}>
                               <Button variant="ghost" size="sm" className="text-yellow-500 hover:text-yellow-400 hover:bg-yellow-500/10">
                                 <Edit className="size-4" />
@@ -598,28 +659,72 @@ function PackagesView() {
           </Button>
         </Card>
       ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           {packages.map((pkg) => (
-            <Card key={pkg.id} className="border-2 border-gray-800 bg-gradient-to-br from-[#2a0f0f] to-black p-5">
-              <div className="flex justify-between items-start mb-3">
-                <div>
-                  <h4 className="text-white font-semibold text-lg">{pkg.title}</h4>
-                  <Badge className="bg-yellow-500/20 text-yellow-400 border border-yellow-500/30 mt-1">{pkg.type}</Badge>
+            <Card key={pkg.id} className="relative border-0 overflow-hidden group cursor-pointer"
+              style={{ background: 'linear-gradient(135deg, #1a0a00 0%, #2d1500 40%, #0a0a0a 100%)' }}>
+              {/* Gold top accent bar */}
+              <div className="h-1 w-full bg-gradient-to-r from-yellow-600 via-yellow-400 to-yellow-600" />
+              
+              <div className="p-6">
+                {/* Header */}
+                <div className="flex justify-between items-start mb-4">
+                  <div className="flex-1">
+                    <span className="inline-block px-3 py-1 rounded-full text-xs font-medium tracking-widest uppercase mb-2"
+                      style={{ background: 'rgba(201,168,76,0.15)', color: '#c9a84c', border: '1px solid rgba(201,168,76,0.3)' }}>
+                      {pkg.type}
+                    </span>
+                    <h4 className="text-xl font-serif text-white tracking-wide">{pkg.title}</h4>
+                  </div>
+                  <div className="flex gap-1 ml-2">
+                    <Button variant="ghost" size="sm" onClick={() => handleEdit(pkg)}
+                      className="text-yellow-500 hover:bg-yellow-500/10 h-8 w-8 p-0">
+                      <Edit className="size-3.5" />
+                    </Button>
+                    <Button variant="ghost" size="sm" onClick={() => handleDelete(pkg.id)}
+                      className="text-red-400 hover:bg-red-500/10 h-8 w-8 p-0">
+                      <Trash2 className="size-3.5" />
+                    </Button>
+                  </div>
                 </div>
-                <div className="flex gap-2">
-                  <Button variant="ghost" size="sm" onClick={() => handleEdit(pkg)} className="text-yellow-500 hover:bg-yellow-500/10">
-                    <Edit className="size-4" />
-                  </Button>
-                  <Button variant="ghost" size="sm" onClick={() => handleDelete(pkg.id)} className="text-red-400 hover:bg-red-500/10">
-                    <Trash2 className="size-4" />
-                  </Button>
+
+                {/* Divider */}
+                <div className="h-px w-full mb-4" style={{ background: 'linear-gradient(to right, rgba(201,168,76,0.5), transparent)' }} />
+
+                {/* Description */}
+                <p className="text-gray-400 text-sm leading-relaxed mb-5 min-h-[40px]">
+                  {pkg.description || 'Premium photography service package'}
+                </p>
+
+                {/* Features from description */}
+                <div className="flex flex-wrap gap-2 mb-5">
+                  {(pkg.description || '').split(/[,•]/).filter((f: string) => f.trim()).slice(0, 3).map((feature: string, i: number) => (
+                    <span key={i} className="text-xs px-2 py-1 rounded"
+                      style={{ background: 'rgba(255,255,255,0.05)', color: '#9ca3af', border: '1px solid rgba(255,255,255,0.08)' }}>
+                      ✦ {feature.trim()}
+                    </span>
+                  ))}
+                </div>
+
+                {/* Footer */}
+                <div className="flex justify-between items-center pt-4"
+                  style={{ borderTop: '1px solid rgba(255,255,255,0.06)' }}>
+                  <div className="flex items-center gap-1.5 text-gray-500 text-sm">
+                    <Clock className="size-3.5" />
+                    <span>{pkg.duration_hours || '-'} hrs</span>
+                  </div>
+                  <div>
+                    <span className="text-xs text-gray-600 block text-right">Starting from</span>
+                    <span className="text-2xl font-bold" style={{ color: '#c9a84c' }}>
+                      Rs.{parseFloat(pkg.base_price).toLocaleString()}
+                    </span>
+                  </div>
                 </div>
               </div>
-              <p className="text-gray-400 text-sm mb-3">{pkg.description || 'No description'}</p>
-              <div className="flex justify-between text-sm">
-                <span className="text-gray-500">Duration: <span className="text-white">{pkg.duration_hours || '-'} hrs</span></span>
-                <span className="text-orange-400 font-bold text-lg">Rs.{parseFloat(pkg.base_price).toLocaleString()}</span>
-              </div>
+
+              {/* Hover glow effect */}
+              <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none"
+                style={{ background: 'radial-gradient(circle at 50% 0%, rgba(201,168,76,0.05) 0%, transparent 70%)' }} />
             </Card>
           ))}
         </div>

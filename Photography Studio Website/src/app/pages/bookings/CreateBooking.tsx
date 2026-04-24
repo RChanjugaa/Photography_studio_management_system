@@ -709,8 +709,17 @@ useEffect(() => {
                 )}
               </div>
               
-              <div className="flex justify-end mt-8">
-                <Button onClick={handleNext} className="bg-red-700 hover:bg-red-800 text-white">
+              <div className="flex justify-between items-center mt-8">
+                <Button
+                  onClick={() => setCreateNewClient(true)}
+                  variant="outline"
+                  className="border-yellow-500/50 text-yellow-500 hover:bg-yellow-500/10"
+                  style={{ display: createNewClient ? 'none' : 'flex' }}
+                >
+                  + Add New Client
+                </Button>
+                {createNewClient && <div />}
+                <Button onClick={handleNext} className="bg-red-700 hover:bg-red-800 text-white ml-auto">
                   Next Step
                 </Button>
               </div>
