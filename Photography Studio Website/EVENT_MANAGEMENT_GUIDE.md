@@ -1,12 +1,12 @@
 # Event Management System - Complete Guide
 
-## 🎯 Overview
+##  Overview
 
 The Ambiance Photography Studio Event Management System provides comprehensive event creation, assignment, photo gallery management, and public event showcase capabilities.
 
 ---
 
-## 📋 Table of Contents
+##  Table of Contents
 
 1. [System Architecture](#system-architecture)
 2. [Access Levels](#access-levels)
@@ -17,7 +17,7 @@ The Ambiance Photography Studio Event Management System provides comprehensive e
 
 ---
 
-## 🏗️ System Architecture
+##  System Architecture
 
 ### **Three-Tier Event System:**
 
@@ -49,58 +49,58 @@ The Ambiance Photography Studio Event Management System provides comprehensive e
 
 ---
 
-## 🔐 Access Levels
+##  Access Levels
 
 ### **1. PUBLIC (No Authentication Required)**
 
 **What They Can See:**
-- ✅ Completed events gallery
-- ✅ Event photos (1080×1080 uniform grid)
-- ✅ Event details (date, location, photographer)
-- ✅ Event types and categories
-- ✅ Lightbox image viewer
+-  Completed events gallery
+-  Event photos (1080×1080 uniform grid)
+-  Event details (date, location, photographer)
+-  Event types and categories
+-  Lightbox image viewer
 
 **What They CANNOT See:**
-- ❌ Upcoming events
-- ❌ Event management controls
-- ❌ Private event notes
-- ❌ Booking IDs
-- ❌ Admin functions
+-  Upcoming events
+-  Event management controls
+-  Private event notes
+-  Booking IDs
+-  Admin functions
 
 ---
 
 ### **2. STAFF (Login Required)**
 
 **What They Can Do:**
-- ✅ View assigned events from dashboard
-- ✅ See event details and location
-- ✅ Check event dates and times
-- ✅ Read event notes
+-  View assigned events from dashboard
+-  See event details and location
+-  Check event dates and times
+-  Read event notes
 
 **What They CANNOT Do:**
-- ❌ Create or edit events
-- ❌ Upload photos
-- ❌ Change assignments
-- ❌ Delete events
-- ❌ Change event status
+-  Create or edit events
+-  Upload photos
+-  Change assignments
+-  Delete events
+-  Change event status
 
 ---
 
 ### **3. ADMIN (Login Required)**
 
 **Full Permissions:**
-- ✅ Create, Read, Update, Delete events
-- ✅ Assign photographers to events
-- ✅ Change event status (upcoming/ongoing/completed/cancelled)
-- ✅ Upload event photos
-- ✅ Manage photo galleries
-- ✅ Filter and search all events
-- ✅ Link events to bookings
-- ✅ View event statistics
+-  Create, Read, Update, Delete events
+-  Assign photographers to events
+-  Change event status (upcoming/ongoing/completed/cancelled)
+-  Upload event photos
+-  Manage photo galleries
+   Filter and search all events
+   Link events to bookings
+-  View event statistics
 
 ---
 
-## 🚀 How to Access
+##  How to Access
 
 ### **Public Events Gallery**
 1. Navigate to the main website
@@ -112,7 +112,7 @@ The Ambiance Photography Studio Event Management System provides comprehensive e
 
 ### **Admin Event Management**
 
-**Option 1: Login & Navigate** ⭐ **RECOMMENDED**
+**Option 1: Login & Navigate**  **RECOMMENDED**
 1. Visit `http://localhost:5173/admin/login`
 2. Enter any email (e.g., `admin@ambiance.lk`)
 3. Enter any password
@@ -138,18 +138,18 @@ localStorage.setItem('userEmail', 'admin@ambiance.lk');
 
 ---
 
-## ✨ Feature Breakdown
+##  Feature Breakdown
 
-### **📂 Admin Event Management** (`/admin/events`)
+### ** Admin Event Management** (`/admin/events`)
 
 #### **1. Event Categories Dashboard**
 
 **Pastel Color-Coded Cards:**
-- 💍 **Wedding** - Pastel Pink
-- 🎂 **Birthday** - Pastel Lavender  
-- 💼 **Corporate** - Pastel Blue
-- 🎭 **Cultural** - Pastel Peach
-- 📸 **Other** - Pastel Mint
+-  **Wedding** - Pastel Pink
+-  **Birthday** - Pastel Lavender  
+-  **Corporate** - Pastel Blue
+-  **Cultural** - Pastel Peach
+-  **Other** - Pastel Mint
 
 **Each Card Shows:**
 - Event type icon (emoji)
@@ -171,10 +171,10 @@ localStorage.setItem('userEmail', 'admin@ambiance.lk');
 - **Actions** - View / Edit / Delete buttons
 
 **Status Colors:**
-- 🔵 **Upcoming** - Blue
-- 🟡 **Ongoing** - Yellow
-- 🟢 **Completed** - Green
-- 🔴 **Cancelled** - Red
+-  **Upcoming** - Blue
+-  **Ongoing** - Yellow
+-  **Completed** - Green
+-  **Cancelled** - Red
 
 **Search & Filters:**
 - Search by name, type, or location
@@ -228,11 +228,11 @@ localStorage.setItem('userEmail', 'admin@ambiance.lk');
 - Photo count
 
 **Event Details Card:**
-- 📅 **Date & Time** with icon
-- 📍 **Location** with icon
-- 📷 **Photographer** with icon
-- 🎫 **Booking ID** (if linked)
-- 📝 **Notes** section
+-  **Date & Time** with icon
+-  **Location** with icon
+-  **Photographer** with icon
+-  **Booking ID** (if linked)
+-  **Notes** section
 
 **Photo Gallery (Completed Events Only):**
 - Only shows for events with status = "completed"
@@ -283,7 +283,7 @@ localStorage.setItem('userEmail', 'admin@ambiance.lk');
 
 ---
 
-### **🌐 Public Events Gallery** (`/events/gallery`)
+### ** Public Events Gallery** (`/events/gallery`)
 
 #### **Gallery Grid View:**
 
@@ -308,7 +308,7 @@ localStorage.setItem('userEmail', 'admin@ambiance.lk');
 
 ---
 
-### **📸 Public Event Detail** (`/events/gallery/:eventId`)
+### ** Public Event Detail** (`/events/gallery/:eventId`)
 
 **Layout:**
 
@@ -340,7 +340,7 @@ localStorage.setItem('userEmail', 'admin@ambiance.lk');
 
 ---
 
-## 🗺️ Routes Reference
+##  Routes Reference
 
 ### **Public Routes (No Auth)**
 ```
@@ -361,7 +361,7 @@ GET  /staff/me                    → Staff Portal (shows assigned events)
 
 ---
 
-## 🔄 Module Switching Guide
+##  Module Switching Guide
 
 ### **Navigation Between Modules:**
 
@@ -412,7 +412,7 @@ Dashboard > "Manage Events" card → /admin/events
 /admin/login      → Admin Login
 /admin/dashboard  → Overview & Stats
 /admin/employees  → Employee Management
-/admin/events     → Event Management ⭐
+/admin/events     → Event Management 
 ```
 
 **Staff Modules:**
@@ -424,12 +424,12 @@ Dashboard > "Manage Events" card → /admin/events
 **Public Modules:**
 ```
 /employees        → Employee Directory
-/events/gallery   → Events Gallery ⭐
+/events/gallery   → Events Gallery 
 ```
 
 ---
 
-## 🎨 Design Features
+##  Design Features
 
 ### **Theme Consistency:**
 - **Background:** Black with burgundy gradients
@@ -461,7 +461,7 @@ Following requirements for pastel colors on category cards:
 
 ---
 
-## 📊 Data Structure (Mock Data)
+##  Data Structure (Mock Data)
 
 ### **Event Object:**
 ```javascript
@@ -493,7 +493,7 @@ Following requirements for pastel colors on category cards:
 
 ---
 
-## 🔄 Integration with Employee Module
+##  Integration with Employee Module
 
 ### **Photographer Assignment:**
 - Events link to employee IDs
@@ -508,7 +508,7 @@ Following requirements for pastel colors on category cards:
 
 ---
 
-## 🚀 Next Steps (Backend Integration)
+##  Next Steps (Backend Integration)
 
 When ready to connect to real database:
 
@@ -536,20 +536,20 @@ When ready to connect to real database:
 
 ---
 
-## 🎯 Key Differentiators
+##  Key Differentiators
 
-✅ **Instagram-Ready:** All photos uniform 1080×1080  
-✅ **Public Showcase:** Completed events visible to potential clients  
-✅ **Photo Management:** Multi-select, batch download  
-✅ **Status Workflow:** Upcoming → Ongoing → Completed  
-✅ **Photographer Linking:** Events tied to employee system  
-✅ **Responsive Design:** Works perfectly on all devices  
-✅ **Visual Categories:** Color-coded event types  
-✅ **Clean Gallery:** ShootProof-inspired minimal design  
+ **Instagram-Ready:** All photos uniform 1080×1080  
+ **Public Showcase:** Completed events visible to potential clients  
+ **Photo Management:** Multi-select, batch download  
+ **Status Workflow:** Upcoming → Ongoing → Completed  
+ **Photographer Linking:** Events tied to employee system  
+ **Responsive Design:** Works perfectly on all devices  
+ **Visual Categories:** Color-coded event types  
+ **Clean Gallery:** ShootProof-inspired minimal design  
 
 ---
 
-## 📞 Support
+##  Support
 
 For questions or issues:
 - Check this guide first
@@ -559,17 +559,17 @@ For questions or issues:
 
 ---
 
-## 🎨 ShootProof Design Inspiration
+##  ShootProof Design Inspiration
 
 Following ShootProof gallery aesthetics:
-- ✅ Clean minimal design
-- ✅ Uniform photo grid
-- ✅ Soft pastel accents
-- ✅ Professional typography
-- ✅ Smooth hover effects
-- ✅ Lightbox viewer
-- ✅ Grid-based layout
+-  Clean minimal design
+-  Uniform photo grid
+-  Soft pastel accents
+-  Professional typography
+-  Smooth hover effects
+-  Lightbox viewer
+-  Grid-based layout
 
 ---
 
-**Built with ❤️ for Ambiance Photography Studio**
+**Built with  for Ambiance Photography Studio**
