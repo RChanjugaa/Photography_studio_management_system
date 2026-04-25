@@ -21,7 +21,7 @@ export default function AdminGallery() {
   const [employees, setEmployees] = useState<any[]>([]);
   const [loadingPhotos, setLoadingPhotos] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
-  const [filterEmployeeId, setFilterEmployeeId] = useState('');
+  const [filterEmployeeId, setFilterEmployeeId] = useState('all');
   const [sortBy, setSortBy] = useState('newest');
   const [showUploadDrawer, setShowUploadDrawer] = useState(false);
   const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
@@ -513,6 +513,113 @@ export default function AdminGallery() {
                 onChange={(e) => setSearchQuery(e.target.value)}
                 className="bg-gray-800 border-gray-700 text-white placeholder:text-gray-500"
               />
+            </div>
+          </div>
+        </Card>
+
+        {/* Statistics Dashboard */}
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
+          <Card className="bg-gradient-to-br from-blue-900/30 to-blue-950 border-blue-800">
+            <div className="p-6">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-gray-400 text-sm mb-1">Total Photos</p>
+                  <p className="text-3xl font-bold text-white">{galleryStats.totalPhotos}</p>
+                </div>
+                <ImageIcon className="size-8 text-blue-500 opacity-50" />
+              </div>
+            </div>
+          </Card>
+
+          <Card className="bg-gradient-to-br from-yellow-900/30 to-yellow-950 border-yellow-800">
+            <div className="p-6">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-gray-400 text-sm mb-1">Avg Daily</p>
+                  <p className="text-3xl font-bold text-white">{galleryStats.avgPhotosPerDay}</p>
+                </div>
+                <TrendingUp className="size-8 text-yellow-500 opacity-50" />
+              </div>
+            </div>
+          </Card>
+
+          <Card className="bg-gradient-to-br from-purple-900/30 to-purple-950 border-purple-800">
+            <div className="p-6">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-gray-400 text-sm mb-1">Photographers</p>
+                  <p className="text-3xl font-bold text-white">{galleryStats.photosByPhotographer.length}</p>
+                </div>
+                <User className="size-8 text-purple-500 opacity-50" />
+              </div>
+            </div>
+          </Card>
+
+          <Card className="bg-gradient-to-br from-green-900/30 to-green-950 border-green-800">
+            <div className="p-6">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-gray-400 text-sm mb-1">Latest Upload</p>
+                  <p className="text-lg font-bold text-white">
+                    {galleryStats.latestUpload ? format(new Date(galleryStats.latestUpload), 'MMM dd') : 'N/A'}
+                  </p>
+                </div>
+                <Clock className="size-8 text-green-500 opacity-50" />
+              </div>
+            </div>
+          </Card>
+        </div>
+
+        {/* Filter Controls */}
+        <Card className="bg-gray-900 border-gray-800 mb-6">
+          <div className="p-4">
+            <div className="flex flex-wrap gap-4 items-center">
+              <div className="flex items-center gap-2">
+                <Filter className="size-4 text-gray-400" />
+                <span className="text-sm text-gray-400">Filters:</span>
+              </div>
+              
+              <Select value={filterEmployeeId} onValueChange={setFilterEmployeeId}>
+                <SelectTrigger className="w-48 bg-gray-800 border-gray-700 text-white">
+                  <SelectValue placeholder="All Photographers" />
+                </SelectTrigger>
+                <SelectContent className="bg-gray-800 border-gray-700">
+                  <SelectItem value="all">All Photographers</SelectItem>
+                  {employees.map((emp) => (
+                    <SelectItem key={emp.id} value={emp.id.toString()}>
+                      {emp.firstName} {emp.lastName}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+
+              <Select value={sortBy} onValueChange={setSortBy}>
+                <SelectTrigger className="w-48 bg-gray-800 border-gray-700 text-white">
+                  <SelectValue placeholder="Sort by" />
+                </SelectTrigger>
+                <SelectContent className="bg-gray-800 border-gray-700">
+                  <SelectItem value="newest">Newest First</SelectItem>
+                  <SelectItem value="oldest">Oldest First</SelectItem>
+                </SelectContent>
+              </Select>
+
+              {(filterEmployeeId || searchQuery) && (
+                <Button
+                  onClick={() => {
+                    setFilterEmployeeId('');
+                    setSearchQuery('');
+                  }}
+                  variant="outline"
+                  size="sm"
+                  className="border-gray-600 text-gray-400 hover:bg-gray-800"
+                >
+                  Clear Filters
+                </Button>
+              )}
+
+              <div className="ml-auto text-sm text-gray-400">
+                Showing {filteredPhotos.length} of {photos.length} photos
+              </div>
             </div>
           </div>
         </Card>
