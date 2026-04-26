@@ -69,7 +69,7 @@ The Ambiance Photography Studio Event Management System provides comprehensive e
 
 ---
 
-### **2. STAFF (Login Required)**
+### **2. STAFF (Login Required)*
 
 **What They Can Do:**
 -  View assigned events from dashboard
