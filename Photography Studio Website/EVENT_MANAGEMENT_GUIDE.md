@@ -431,7 +431,7 @@ Dashboard > "Manage Events" card → /admin/events
 
 ##  Design Features
 
-### **Theme Consistency:**
+## **Theme Consistency:**
 - **Background:** Black with burgundy gradients
 - **Primary:** Yellow/Gold (#fbbf24)
 - **Accent:** Red (#991b1b)
@@ -459,12 +459,12 @@ Following requirements for pastel colors on category cards:
 - Hover scale effects
 - Smooth color transitions
 
----
+
 
 ##  Data Structure (Mock Data)
 
 ### **Event Object:**
-```javascript
+``javascript
 {
   id: 1,
   name: 'Silva-Perera Wedding',
@@ -547,7 +547,7 @@ When ready to connect to real database:
  **Visual Categories:** Color-coded event types  
  **Clean Gallery:** ShootProof-inspired minimal design  
 
----
+--
 
 ##  Support
 
