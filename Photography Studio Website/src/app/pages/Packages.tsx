@@ -13,6 +13,19 @@ const [selectedCategory, setSelectedCategory] = useState('all');
 const [dbPackages, setDbPackages] = useState<any[]>([]);
 const [loadingPkgs, setLoadingPkgs] = useState(true);
 
+const categories = [
+  { id: 'all', name: 'All Packages' },
+  { id: 'wedding', name: '💍 Wedding' },
+  { id: 'mehendi', name: '🌿 Mehendi' },
+  { id: 'preshoot', name: '📸 Pre-Shoot' },
+  { id: 'engagement', name: '💕 Engagement' },
+  { id: 'birthday', name: '🎂 Birthday' },
+  { id: 'corporate', name: '💼 Corporate' },
+  { id: 'photography', name: '📷 Photography' },
+  { id: 'cinematography', name: '🎬 Cinematography' },
+  { id: 'dj', name: '🎵 DJ' },
+];
+
 useEffect(() => {
   const fetchPkgs = async () => {
     try {
@@ -29,23 +42,39 @@ useEffect(() => {
   fetchPkgs();
 }, []);
 
-  
-  
-                        const displayPackages = dbPackages.length > 0 ? dbPackages.map(p => ({
-                  id: p.id,
-                  category: p.type.toLowerCase(),
-                  name: p.title,
-                  price: parseFloat(p.base_price),
-                  duration: p.duration_hours ? `${p.duration_hours} Hours` : 'Custom',
-                  featured: false,
-                  icon: Heart,
-                  color: 'from-yellow-600 to-yellow-500',
-                  features: p.description ? p.description.split(',').map((f: string) => f.trim()) : ['Professional coverage', 'Edited photos', 'Digital delivery']
-                })) : packages;
+const categoryMap: Record<string, string> = {
+  'wedding': 'wedding',
+  'mehendi': 'mehendi',
+  'mehendi/haldi': 'mehendi',
+  'preshoot': 'preshoot',
+  'pre-shoot': 'preshoot',
+  'pre shoot': 'preshoot',
+  'birthday': 'birthday',
+  'corporate': 'corporate',
+  'photography': 'photography',
+  'cinematography': 'cinematography',
+  'engagement': 'engagement',
+  'dj': 'dj',
+  'event': 'event',
+};
 
-                const filteredPackages = selectedCategory === 'all'
-                  ? displayPackages
-                  : displayPackages.filter(pkg => pkg.category === selectedCategory);
+const displayPackages = dbPackages.map(p => ({
+  id: p.id,
+  category: categoryMap[(p.type || '').toLowerCase()] || (p.type || '').toLowerCase(),
+  name: p.title,
+  price: parseFloat(p.base_price),
+  duration: p.duration_hours ? `${p.duration_hours} Hours` : 'Custom',
+  featured: false,
+  icon: Heart,
+  color: 'from-yellow-600 to-yellow-500',
+  features: p.description
+    ? p.description.split(/[,•\n]/).map((f: string) => f.trim()).filter(Boolean)
+    : ['Professional coverage', 'Edited photos', 'Digital delivery']
+}));
+
+const filteredPackages = selectedCategory === 'all'
+  ? displayPackages
+  : displayPackages.filter(pkg => pkg.category === selectedCategory);
   return (
     <div className="min-h-screen bg-black">
       {/* Hero Section */}
@@ -90,6 +119,17 @@ useEffect(() => {
       {/* Packages Grid */}
       <section className="py-20 bg-black">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          {loadingPkgs ? (
+            <div className="text-center py-16">
+              <div className="inline-block w-10 h-10 border-4 border-yellow-500 border-t-transparent rounded-full animate-spin mb-4"></div>
+              <p className="text-gray-400">Loading packages...</p>
+            </div>
+          ) : filteredPackages.length === 0 ? (
+            <div className="text-center py-16">
+              <p className="text-gray-500 text-lg">No packages found in this category.</p>
+              <p className="text-gray-600 text-sm mt-2">Admin can add packages from the Bookings → Packages section.</p>
+            </div>
+          ) : (
           <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
             {filteredPackages.map((pkg, index) => (
               <motion.div
@@ -155,11 +195,6 @@ useEffect(() => {
               </motion.div>
             ))}
           </div>
-          
-          {filteredPackages.length === 0 && (
-            <div className="text-center py-16">
-              <p className="text-gray-500 text-lg">No packages found in this category.</p>
-            </div>
           )}
         </div>
       </section>

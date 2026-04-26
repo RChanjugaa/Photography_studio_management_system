@@ -340,7 +340,7 @@ export default function BookingsManagement() {
               </Card>
             ) : (
               <div className="space-y-3">
-                <div className="grid grid-cols-12 gap-3 px-6 py-3 bg-gray-900 border border-gray-800 rounded-lg text-sm font-medium text-gray-400 uppercase tracking-wide">
+                <div className="hidden md:grid grid-cols-12 gap-2 px-4 py-3 bg-gray-900 border border-gray-800 rounded-lg text-xs font-medium text-gray-400 uppercase tracking-wide">
                   <div className="col-span-2">Booking #</div>
                   <div className="col-span-2">Client</div>
                   <div className="col-span-2">Date</div>
@@ -361,26 +361,61 @@ export default function BookingsManagement() {
                       transition={{ duration: 0.3, delay: idx * 0.03 }}
                     >
                       <Card className="border-2 border-gray-800 hover:border-yellow-500/50 transition-colors bg-gradient-to-r from-[#2a0f0f] to-black">
-                        <div className="grid grid-cols-12 gap-3 px-6 py-4 items-center">
-                          <div className="col-span-2">
-                            <div className="font-mono text-yellow-500 text-sm">{booking.booking_number || `#${booking.id}`}</div>
-                            <div className="text-xs text-gray-500">{getServiceType(booking)}</div>
+                        {/* Mobile layout */}
+                        <div className="block md:hidden px-4 py-4 space-y-3">
+                          <div className="flex justify-between items-start">
+                            <div>
+                              <div className="font-mono text-yellow-500 text-sm">{booking.booking_number || `#${booking.id}`}</div>
+                              <div className="font-medium text-white">{getClientName(booking)}</div>
+                              <div className="text-xs text-gray-400">Client ID: {booking.client_id || 'N/A'}</div>
+                            </div>
+                            <div className="text-orange-400 font-bold text-lg">Rs.{parseFloat(booking.amount || 0).toLocaleString()}</div>
                           </div>
-                          <div className="col-span-2">
-                            <div className="font-medium text-white text-sm">{getClientName(booking)}</div>
-                            <div className="text-xs text-gray-500">Client ID: {booking.client_id || 'N/A'}</div>
+                          <div className="flex justify-between text-sm text-gray-400">
+                            <span>{eventDate.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}</span>
+                            <span>{booking.event_time || 'TBD'}</span>
                           </div>
-                          <div className="col-span-2">
+                          <div className="flex justify-between items-center gap-2">
+                            <select
+                              className="flex-1 rounded-lg bg-gray-900 border border-gray-700 text-white px-2 py-1 text-xs"
+                              value={booking.status || 'pending'}
+                              onChange={(e) => handleStatusChange(booking.id, e.target.value)}
+                            >
+                              <option value="pending">Pending</option>
+                              <option value="confirmed">Confirmed</option>
+                              <option value="in_progress">In Progress</option>
+                              <option value="completed">Completed</option>
+                              <option value="cancelled">Cancelled</option>
+                            </select>
+                            <div className="flex gap-1">
+                              <Button variant="ghost" size="sm" className="text-blue-400 hover:bg-blue-500/10 h-8 w-8 p-0" onClick={() => handlePrint(booking)}><Printer className="size-4" /></Button>
+                              <Link to={`/admin/bookings/${booking.id}`}><Button variant="ghost" size="sm" className="text-yellow-500 hover:bg-yellow-500/10 h-8 w-8 p-0"><Edit className="size-4" /></Button></Link>
+                              <Button variant="ghost" size="sm" className="text-red-400 hover:bg-red-500/10 h-8 w-8 p-0" onClick={() => handleDeleteBooking(booking.id)}><Trash2 className="size-4" /></Button>
+                            </div>
+                          </div>
+                        </div>
+
+                        {/* Desktop layout */}
+                        <div className="hidden md:grid grid-cols-12 gap-2 px-4 py-4 items-center">
+                          <div className="col-span-2 min-w-0">
+                            <div className="font-mono text-yellow-500 text-xs truncate">{booking.booking_number || `#${booking.id}`}</div>
+                            <div className="text-xs text-gray-500 truncate">{getServiceType(booking)}</div>
+                          </div>
+                          <div className="col-span-2 min-w-0">
+                            <div className="font-medium text-white text-sm truncate">{getClientName(booking)}</div>
+                            <div className="text-xs text-gray-500">ID: {booking.client_id || 'N/A'}</div>
+                          </div>
+                          <div className="col-span-2 min-w-0">
                             <div className="text-white text-sm">{eventDate.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}</div>
                             <div className="text-xs text-gray-500">{booking.event_time || 'TBD'}</div>
                           </div>
-                          <div className="col-span-1">
-                            <div className="text-orange-400 font-semibold text-sm">Rs.{parseFloat(booking.amount || 0).toLocaleString()}</div>
+                          <div className="col-span-1 min-w-0">
+                            <div className="text-orange-400 font-semibold text-xs">Rs.{parseFloat(booking.amount || 0).toLocaleString()}</div>
                           </div>
-                          <div className="col-span-2 text-white text-sm">{assignedEmployees.length ? assignedEmployees.join(', ') : 'Unassigned'}</div>
+                          <div className="col-span-2 text-white text-xs truncate">{assignedEmployees.length ? assignedEmployees.join(', ') : 'Unassigned'}</div>
                           <div className="col-span-2">
                             <select
-                              className="w-full rounded-lg bg-gray-900 border border-gray-700 text-white px-2 py-1 text-xs"
+                              className="w-full rounded bg-gray-900 border border-gray-700 text-white px-1.5 py-1 text-xs"
                               value={booking.status || 'pending'}
                               onChange={(e) => handleStatusChange(booking.id, e.target.value)}
                             >
@@ -391,18 +426,10 @@ export default function BookingsManagement() {
                               <option value="cancelled">Cancelled</option>
                             </select>
                           </div>
-                          <div className="col-span-1 text-right flex justify-end gap-1">
-                            <Button variant="ghost" size="sm" className="text-blue-400 hover:text-blue-300 hover:bg-blue-500/10" onClick={() => handlePrint(booking)} title="Print Booking">
-                              <Printer className="size-4" />
-                            </Button>
-                            <Link to={`/admin/bookings/${booking.id}`}>
-                              <Button variant="ghost" size="sm" className="text-yellow-500 hover:text-yellow-400 hover:bg-yellow-500/10">
-                                <Edit className="size-4" />
-                              </Button>
-                            </Link>
-                            <Button variant="ghost" size="sm" className="text-red-400 hover:text-red-300 hover:bg-red-500/10" onClick={() => handleDeleteBooking(booking.id)}>
-                              <Trash2 className="size-4" />
-                            </Button>
+                          <div className="col-span-1 flex justify-end gap-0.5">
+                            <Button variant="ghost" size="sm" className="text-blue-400 hover:bg-blue-500/10 h-7 w-7 p-0" onClick={() => handlePrint(booking)} title="Print"><Printer className="size-3.5" /></Button>
+                            <Link to={`/admin/bookings/${booking.id}`}><Button variant="ghost" size="sm" className="text-yellow-500 hover:bg-yellow-500/10 h-7 w-7 p-0"><Edit className="size-3.5" /></Button></Link>
+                            <Button variant="ghost" size="sm" className="text-red-400 hover:bg-red-500/10 h-7 w-7 p-0" onClick={() => handleDeleteBooking(booking.id)}><Trash2 className="size-3.5" /></Button>
                           </div>
                         </div>
                       </Card>
@@ -672,7 +699,7 @@ function PackagesView() {
                   <div className="flex-1">
                     <span className="inline-block px-3 py-1 rounded-full text-xs font-medium tracking-widest uppercase mb-2"
                       style={{ background: 'rgba(201,168,76,0.15)', color: '#c9a84c', border: '1px solid rgba(201,168,76,0.3)' }}>
-                      {pkg.type}
+                      {pkg.type || 'General'}
                     </span>
                     <h4 className="text-xl font-serif text-white tracking-wide">{pkg.title}</h4>
                   </div>
@@ -756,13 +783,16 @@ function PackagesView() {
                   onChange={(e) => setForm({ ...form, type: e.target.value })}
                   className="w-full bg-gray-800 border border-gray-700 text-white rounded-lg px-3 py-2 text-sm"
                 >
-                  <option value="Wedding">Wedding</option>
-                  <option value="Engagement">Engagement</option>
-                  <option value="Mehendi/Haldi">Mehendi/Haldi</option>
-                  <option value="Preshoot">Preshoot</option>
-                  <option value="Event">Event</option>
-                  <option value="Studio">Studio</option>
-                  <option value="DJ">DJ</option>
+                  <option value="Wedding">💍 Wedding</option>
+                  <option value="Mehendi">🌿 Mehendi</option>
+                  <option value="Preshoot">📸 Pre-Shoot</option>
+                  <option value="Engagement">💕 Engagement</option>
+                  <option value="Birthday">🎂 Birthday</option>
+                  <option value="Corporate">💼 Corporate</option>
+                  <option value="Photography">📷 Photography</option>
+                  <option value="Cinematography">🎬 Cinematography</option>
+                  <option value="DJ">🎵 DJ</option>
+                  <option value="Event">🎉 Event</option>
                 </select>
               </div>
 
