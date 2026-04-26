@@ -108,7 +108,7 @@ The Ambiance Photography Studio Event Management System provides comprehensive e
 3. OR directly visit: `http://localhost:5173/events/gallery`
 4. No login required!
 
----
+
 
 ### **Admin Event Management**
 
@@ -142,7 +142,7 @@ localStorage.setItem('userEmail', 'admin@ambiance.lk');
 
 ### ** Admin Event Management** (`/admin/events`)
 
-#### **1. Event Categories Dashboard**
+##**1. Event Categories Dashboard**
 
 **Pastel Color-Coded Cards:**
 -  **Wedding** - Pastel Pink
