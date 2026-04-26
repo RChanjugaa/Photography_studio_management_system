@@ -217,7 +217,7 @@ localStorage.setItem('userEmail', 'admin@ambiance.lk');
 
 ---
 
-#### **4. Event Details Drawer**
+## **4. Event Details Drawer**
 
 **Comprehensive Event View:**
 
@@ -258,7 +258,7 @@ localStorage.setItem('userEmail', 'admin@ambiance.lk');
 
 ---
 
-#### **5. Photo Gallery Features**
+### **5. Photo Gallery Features**
 
 **Selection System:**
 - Click photo to select/deselect
@@ -283,9 +283,9 @@ localStorage.setItem('userEmail', 'admin@ambiance.lk');
 
 ---
 
-### ** Public Events Gallery** (`/events/gallery`)
+## ** Public Events Gallery** (`/events/gallery`)
 
-#### **Gallery Grid View:**
+### **Gallery Grid View:**
 
 **Event Cards Show:**
 - Cover photo (square)
@@ -354,7 +354,7 @@ GET  /admin/events                → Admin Event Management Console
 GET  /admin/dashboard             → Admin Dashboard (includes event stats)
 ```
 
-### **Staff Routes (Staff Auth)**
+## **Staff Routes (Staff Auth)**
 ```
 GET  /staff/me                    → Staff Portal (shows assigned events)
 ```
