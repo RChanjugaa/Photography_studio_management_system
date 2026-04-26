@@ -49,7 +49,7 @@ The Ambiance Photography Studio Event Management System provides comprehensive e
 
 
 
-##  Access Levels
+
 
 ### **1. PUBLIC (No Authentication Required)**
 
