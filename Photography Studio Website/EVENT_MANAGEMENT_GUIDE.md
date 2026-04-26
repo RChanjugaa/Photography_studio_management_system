@@ -136,8 +136,7 @@ localStorage.setItem('userEmail', 'admin@ambiance.lk');
 // Then navigate to: http://localhost:5173/admin/events
 ```
 
-
-
+FEATURE 
 ##  Feature Breakdown
 
 ### ** Admin Event Management** (`/admin/events`)
