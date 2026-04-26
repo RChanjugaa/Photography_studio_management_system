@@ -136,7 +136,7 @@ localStorage.setItem('userEmail', 'admin@ambiance.lk');
 // Then navigate to: http://localhost:5173/admin/events
 ```
 
----
+
 
 ##  Feature Breakdown
 
@@ -144,7 +144,7 @@ localStorage.setItem('userEmail', 'admin@ambiance.lk');
 
 ##**1. Event Categories Dashboard**
 
-**Pastel Color-Coded Cards:**
+*Pastel Color-Coded Cards:**
 -  **Wedding** - Pastel Pink
 -  **Birthday** - Pastel Lavender  
 -  **Corporate** - Pastel Blue
@@ -172,7 +172,7 @@ localStorage.setItem('userEmail', 'admin@ambiance.lk');
 
 **Status Colors:**
 -  **Upcoming** - Blue
--  **Ongoing** - Yellow
+- **Ongoing** - Yellow
 -  **Completed** - Green
 -  **Cancelled** - Red
 
