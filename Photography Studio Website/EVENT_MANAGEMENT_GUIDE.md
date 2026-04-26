@@ -1,4 +1,4 @@
-# Event Management System - Complete Guide
+Event Management System - Complete Guide
 
 ##  Overview
 
