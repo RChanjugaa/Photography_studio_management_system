@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router';
-import { Search, Plus, Edit, Eye, Trash2, Calendar, MapPin, User, Camera, Download, Upload, X, Filter, FileDown } from 'lucide-react';
+import { Search, Plus, Edit, Eye, Trash2, Calendar, MapPin, User, Camera, Download, Upload, X, Filter } from 'lucide-react';
 import { Button } from '../../components/ui/button';
 import { Input } from '../../components/ui/input';
 import { Label } from '../../components/ui/label';
@@ -295,156 +295,6 @@ export default function AdminEventManagement() {
     toast.info('Photo upload feature - to be implemented');
   };
   
-  const handleExportPDF = () => {
-  import('jspdf').then(({ default: jsPDF }) => {
-    import('jspdf-autotable').then(() => {
-      const doc = new jsPDF('landscape', 'mm', 'a4');
-      
-      // Header background
-      doc.setFillColor(42, 15, 15);
-      doc.rect(0, 0, 297, 40, 'F');
-      
-      // Studio name
-      doc.setFontSize(24);
-      doc.setTextColor(200, 169, 110);
-      doc.setFont('helvetica', 'bold');
-      doc.text('AMBIANCE STUDIO', 148, 16, { align: 'center' });
-      
-      // Report title
-      doc.setFontSize(12);
-      doc.setTextColor(200, 200, 200);
-      doc.setFont('helvetica', 'normal');
-      doc.text('Events Management Report', 148, 26, { align: 'center' });
-      
-      // Generated date
-      doc.setFontSize(9);
-      doc.setTextColor(150, 150, 150);
-      doc.text(`Generated: ${new Date().toLocaleDateString('en-US', { 
-        weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' 
-      })}`, 148, 34, { align: 'center' });
-
-      // Summary stats box
-      doc.setFillColor(30, 30, 30);
-      doc.roundedRect(10, 45, 277, 22, 3, 3, 'F');
-      
-      const total = filteredEvents.length;
-      const upcoming = filteredEvents.filter(e => e.status === 'upcoming').length;
-      const completed = filteredEvents.filter(e => e.status === 'completed').length;
-      const ongoing = filteredEvents.filter(e => e.status === 'ongoing').length;
-      const cancelled = filteredEvents.filter(e => e.status === 'cancelled').length;
-
-      doc.setFontSize(10);
-      doc.setTextColor(200, 169, 110);
-      doc.setFont('helvetica', 'bold');
-      doc.text(`Total Events: ${total}`, 25, 55);
-      doc.text(`Upcoming: ${upcoming}`, 85, 55);
-      doc.text(`Completed: ${completed}`, 145, 55);
-      doc.text(`Ongoing: ${ongoing}`, 205, 55);
-      doc.text(`Cancelled: ${cancelled}`, 250, 55);
-
-      // Filter info
-      if (typeFilter !== 'all' || statusFilter !== 'all' || searchQuery) {
-        doc.setFontSize(8);
-        doc.setTextColor(150, 150, 150);
-        doc.setFont('helvetica', 'italic');
-        let filterText = 'Filters applied: ';
-        if (typeFilter !== 'all') filterText += `Type: ${typeFilter}  `;
-        if (statusFilter !== 'all') filterText += `Status: ${statusFilter}  `;
-        if (searchQuery) filterText += `Search: "${searchQuery}"`;
-        doc.text(filterText, 10, 72);
-      }
-
-      // Table
-      (doc as any).autoTable({
-        startY: 76,
-        head: [[
-          'Event ID', 'Event Name', 'Type', 'Date', 'Time',
-          'Location', 'Photographer', 'Booking ID', 'Status'
-        ]],
-        body: filteredEvents.map(event => [
-          `#${event.id.toString().padStart(4, '0')}`,
-          event.name,
-          event.type,
-          event.date,
-          event.time || '-',
-          event.location || '-',
-          event.photographerName || 'Unassigned',
-          event.bookingId || '-',
-          event.status.toUpperCase()
-        ]),
-        headStyles: {
-          fillColor: [42, 15, 15],
-          textColor: [200, 169, 110],
-          fontStyle: 'bold',
-          fontSize: 9
-        },
-        bodyStyles: {
-          fontSize: 8,
-          textColor: [50, 50, 50]
-        },
-        alternateRowStyles: {
-          fillColor: [245, 245, 245]
-        },
-        columnStyles: {
-          0: { cellWidth: 18 },
-          1: { cellWidth: 50 },
-          2: { cellWidth: 22 },
-          3: { cellWidth: 24 },
-          4: { cellWidth: 16 },
-          5: { cellWidth: 55 },
-          6: { cellWidth: 35 },
-          7: { cellWidth: 28 },
-          8: { cellWidth: 22 }
-        },
-        didDrawCell: (data: any) => {
-          if (data.column.index === 8 && data.section === 'body') {
-            const status = data.cell.text[0].toLowerCase();
-            const colors: any = {
-              'UPCOMING': [59, 130, 246],
-              'COMPLETED': [34, 197, 94],
-              'ONGOING': [234, 179, 8],
-              'CANCELLED': [239, 68, 68]
-            };
-            const color = colors[data.cell.text[0]] || [128, 128, 128];
-            doc.setFillColor(...color);
-            doc.roundedRect(
-              data.cell.x + 1,
-              data.cell.y + 1.5,
-              data.cell.width - 2,
-              data.cell.height - 3,
-              2, 2, 'F'
-            );
-            doc.setTextColor(255, 255, 255);
-            doc.setFontSize(7);
-            doc.text(
-              data.cell.text[0],
-              data.cell.x + data.cell.width / 2,
-              data.cell.y + data.cell.height / 2 + 1,
-              { align: 'center' }
-            );
-          }
-        }
-      });
-
-      // Footer
-      const pageCount = (doc as any).internal.getNumberOfPages();
-      for (let i = 1; i <= pageCount; i++) {
-        doc.setPage(i);
-        doc.setFillColor(42, 15, 15);
-        doc.rect(0, 195, 297, 12, 'F');
-        doc.setFontSize(8);
-        doc.setTextColor(150, 150, 150);
-        doc.text('Ambiance Studio — Confidential', 10, 202);
-        doc.text(`Page ${i} of ${pageCount}`, 287, 202, { align: 'right' });
-      }
-
-      const fileName = `ambiance-events-report-${new Date().toISOString().split('T')[0]}.pdf`;
-      doc.save(fileName);
-      toast.success(`📄 ${fileName} downloaded!`);
-    });
-  });
-};
-
   const getStatusBadgeClass = (status: string) => {
     switch (status) {
       case 'upcoming':
@@ -471,24 +321,14 @@ export default function AdminEventManagement() {
               <h1 className="text-4xl font-serif text-yellow-500 mb-2 uppercase">Event Management</h1>
               <p className="text-gray-400">Manage events, assignments, and photo galleries</p>
             </div>
-           <div className="flex gap-3 mt-4 md:mt-0">
-  <Button
-    onClick={handleExportPDF}
-    variant="outline"
-    className="border-yellow-700 text-yellow-500 hover:bg-yellow-900/20"
-  >
-    <FileDown className="size-4 mr-2" />
-    Export PDF Report
-  </Button>
-  <Button
-    onClick={handleAddEvent}
-    className="bg-red-700 hover:bg-red-800 text-white"
-  >
-    <Plus className="size-4 mr-2" />
-    Add New Event
-  </Button>
-</div>
-</div>
+            <Button
+              onClick={handleAddEvent}
+              className="bg-red-700 hover:bg-red-800 text-white mt-4 md:mt-0"
+            >
+              <Plus className="size-4 mr-2" />
+              Add New Event
+            </Button>
+          </div>
           
           {/* Event Categories */}
           <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4 mb-8">
