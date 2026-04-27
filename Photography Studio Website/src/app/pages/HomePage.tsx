@@ -5,15 +5,12 @@ import { Button } from '../components/ui/button';
 import { Card } from '../components/ui/card';
 import { ImageWithFallback } from '../components/figma/ImageWithFallback';
 import { motion, AnimatePresence } from 'motion/react';
-import { galleryAPI } from '../../services/api';
 
 export default function HomePage() {
   const [activeSlide, setActiveSlide] = useState(0);
   const [autoPlay, setAutoPlay] = useState(true);
   const [serviceMode, setServiceMode] = useState('photography'); // 'photography' or 'events'
   const [eventType, setEventType] = useState('dj'); // 'dj', 'music', 'party', 'wedding'
-  const [galleryPhotos, setGalleryPhotos] = useState<any[]>([]);
-  const [loadingGallery, setLoadingGallery] = useState(true);
   
   // Photography Mode Data
   const photographySlides = [
@@ -221,26 +218,7 @@ export default function HomePage() {
     
     return () => clearInterval(timer);
   }, [autoPlay, slides.length]);
-  // Fetch gallery photos
-  useEffect(() => {
-    const fetchGalleryPhotos = async () => {
-      try {
-        setLoadingGallery(true);
-        const response = await galleryAPI.getAll();
-        if (response.success && Array.isArray(response.data)) {
-          // Get only photos with descriptions (featured photos)
-          const featuredPhotos = response.data.filter((p: any) => p.description && p.image_url).slice(0, 12);
-          setGalleryPhotos(featuredPhotos);
-        }
-      } catch (error) {
-        console.error('Error fetching gallery:', error);
-      } finally {
-        setLoadingGallery(false);
-      }
-    };
-    
-    fetchGalleryPhotos();
-  }, []);  
+  
   const nextSlide = () => {
     setAutoPlay(false);
     setActiveSlide((prev) => (prev + 1) % slides.length);
@@ -483,7 +461,7 @@ export default function HomePage() {
                   </Button>
                 </Link>
                 <Link to="/packages">
-                  <Button variant="outline" className="border-2 border-white text-white hover:bg-white hover:text-black text-lg px-8 py-6 h-auto font-semibold">
+                  <Button variant="outline" className="border-2 border-white text-white bg-transparent hover:bg-white hover:text-black text-lg px-8 py-6 h-auto font-semibold">
                     View Packages
                   </Button>
                 </Link>
@@ -837,62 +815,6 @@ export default function HomePage() {
         </div>
       </section>
       
-      {/* Gallery Showcase Section */}
-      {galleryPhotos.length > 0 && (
-        <section className="py-20 bg-black">
-          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true }}
-              className="text-center mb-16"
-            >
-              <h2 className="text-4xl md:text-5xl font-serif text-white mb-4">Recent Works</h2>
-              <p className="text-xl text-gray-400">Explore our latest photography from featured events and sessions</p>
-            </motion.div>
-
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-              {galleryPhotos.map((photo, index) => (
-                <motion.div
-                  key={photo.id}
-                  initial={{ opacity: 0, scale: 0.9 }}
-                  whileInView={{ opacity: 1, scale: 1 }}
-                  viewport={{ once: true }}
-                  transition={{ delay: index * 0.1 }}
-                  className="relative group rounded-lg overflow-hidden aspect-square"
-                >
-                  <img
-                    src={photo.image_url}
-                    alt={photo.description}
-                    className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-300"
-                    onError={(e) => {
-                      (e.target as HTMLImageElement).src = 'https://via.placeholder.com/400?text=Photo';
-                    }}
-                  />
-                  
-                  {/* Overlay */}
-                  <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity flex flex-col justify-end p-6">
-                    <h3 className="text-lg font-semibold text-white mb-2">{photo.description}</h3>
-                    {photo.upload_date && (
-                      <p className="text-sm text-gray-300">{new Date(photo.upload_date).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })}</p>
-                    )}
-                  </div>
-                </motion.div>
-              ))}
-            </div>
-
-            <div className="text-center mt-12">
-              <Link to="/events/gallery">
-                <Button className="bg-gradient-to-r from-yellow-600 to-yellow-500 hover:from-yellow-500 hover:to-yellow-400 text-black text-lg px-10 py-6 h-auto font-semibold">
-                  View Full Gallery
-                  <ArrowRight className="ml-2 size-5" />
-                </Button>
-              </Link>
-            </div>
-          </div>
-        </section>
-      )}
-      
       {/* CTA Section */}
       <section className="py-20 bg-gradient-to-r from-[#2a0f0f] via-[#3d1616] to-[#2a0f0f]">
         <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
@@ -936,7 +858,7 @@ export default function HomePage() {
                 </Button>
               </Link>
               <Link to="/contact">
-                <Button variant="outline" className="border-2 border-white text-white hover:bg-white hover:text-black text-lg px-10 py-6 h-auto font-semibold">
+                <Button variant="outline" className="border-2 border-white text-white bg-transparent hover:bg-white hover:text-black text-lg px-10 py-6 h-auto font-semibold">
                   Contact Us
                 </Button>
               </Link>

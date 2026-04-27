@@ -140,7 +140,7 @@ export default function Cinematography() {
                     <ArrowRight className="ml-2 size-5" />
                   </Button>
                 </Link>
-                <Button variant="outline" className="border-2 border-white text-white hover:bg-white hover:text-black text-lg px-8 py-6 h-auto font-semibold">
+                <Button variant="outline" className="border-2 border-white text-white bg-transparent hover:bg-white hover:text-black text-lg px-8 py-6 h-auto font-semibold">
                   <Play className="mr-2 size-5" />
                   Watch Our Work
                 </Button>
@@ -393,7 +393,7 @@ export default function Cinematography() {
                 </Button>
               </Link>
               <Link to="/contact">
-                <Button variant="outline" className="border-2 border-white text-white hover:bg-white hover:text-black text-lg px-10 py-6 h-auto font-semibold">
+                <Button variant="outline" className="border-2 border-white text-white bg-transparent hover:bg-white hover:text-black text-lg px-10 py-6 h-auto font-semibold">
                   Contact Us
                 </Button>
               </Link>
