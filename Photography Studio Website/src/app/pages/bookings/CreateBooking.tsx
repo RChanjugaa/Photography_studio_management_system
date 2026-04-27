@@ -548,10 +548,13 @@ useEffect(() => {
     }
   };
   
-  const currentMonth = new Date();
+  const [calendarMonth, setCalendarMonth] = useState(new Date());
+  const currentMonth = calendarMonth;
   const monthStart = startOfMonth(currentMonth);
   const monthEnd = endOfMonth(currentMonth);
   const days = eachDayOfInterval({ start: monthStart, end: monthEnd });
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
   
   return (
     <div className="min-h-screen bg-black py-12">
@@ -648,16 +651,6 @@ useEffect(() => {
                         </div>
                       ))}
                     </div>
-                    
-                    <div className="text-center pt-4 border-t border-gray-800">
-                      <Button
-                        onClick={() => setCreateNewClient(true)}
-                        variant="outline"
-                        className="border-gray-700 text-gray-300 hover:bg-gray-800"
-                      >
-                        Or Create New Client
-                      </Button>
-                    </div>
                   </>
                 ) : (
                   <>
@@ -692,34 +685,29 @@ useEffect(() => {
                         />
                       </div>
                     </div>
-                    
-                    <div className="text-center pt-4 border-t border-gray-800">
-                      <Button
-                        onClick={() => {
-                          setCreateNewClient(false);
-                          setSelectedClient(null);
-                        }}
-                        variant="outline"
-                        className="border-gray-700 text-gray-300 hover:bg-gray-800"
-                      >
-                        Select Existing Client Instead
-                      </Button>
-                    </div>
                   </>
                 )}
               </div>
               
-              <div className="flex justify-between items-center mt-8">
-                <Button
-                  onClick={() => setCreateNewClient(true)}
-                  variant="outline"
-                  className="border-yellow-500/50 text-yellow-500 hover:bg-yellow-500/10"
-                  style={{ display: createNewClient ? 'none' : 'flex' }}
-                >
-                  + Add New Client
-                </Button>
-                {createNewClient && <div />}
-                <Button onClick={handleNext} className="bg-red-700 hover:bg-red-800 text-white ml-auto">
+              <div className="flex justify-between items-center mt-8 pt-4 border-t border-gray-800">
+                {!createNewClient ? (
+                  <Button
+                    onClick={() => setCreateNewClient(true)}
+                    variant="outline"
+                    className="border-yellow-500/50 text-yellow-500 hover:bg-yellow-500/10"
+                  >
+                    + Add New Client
+                  </Button>
+                ) : (
+                  <Button
+                    onClick={() => { setCreateNewClient(false); setSelectedClient(null); }}
+                    variant="outline"
+                    className="border-gray-700 text-gray-400 hover:bg-gray-800"
+                  >
+                    ← Back to Search
+                  </Button>
+                )}
+                <Button onClick={handleNext} className="bg-red-700 hover:bg-red-800 text-white">
                   Next Step
                 </Button>
               </div>
@@ -809,10 +797,31 @@ useEffect(() => {
                   
                   <div className="border-2 border-gray-800 rounded-lg overflow-hidden">
                     {/* Calendar Header */}
-                    <div className="bg-gray-900 px-4 py-3 border-b border-gray-800">
+                    <div className="bg-gray-900 px-4 py-3 border-b border-gray-800 flex items-center justify-between">
+                      <button
+                        onClick={() => {
+                          const prev = new Date(calendarMonth);
+                          prev.setMonth(prev.getMonth() - 1);
+                          if (prev >= startOfMonth(today)) setCalendarMonth(prev);
+                        }}
+                        className="text-gray-400 hover:text-white px-2 py-1 rounded hover:bg-gray-800 transition-colors disabled:opacity-30"
+                        disabled={startOfMonth(calendarMonth) <= startOfMonth(today)}
+                      >
+                        ‹
+                      </button>
                       <div className="text-center text-white font-semibold">
                         {format(currentMonth, 'MMMM yyyy')}
                       </div>
+                      <button
+                        onClick={() => {
+                          const next = new Date(calendarMonth);
+                          next.setMonth(next.getMonth() + 1);
+                          setCalendarMonth(next);
+                        }}
+                        className="text-gray-400 hover:text-white px-2 py-1 rounded hover:bg-gray-800 transition-colors"
+                      >
+                        ›
+                      </button>
                     </div>
                     
                     {/* Week days */}
@@ -832,7 +841,9 @@ useEffect(() => {
                       
                       {days.map((day) => {
                         const isSelected = selectedDate && isSameDay(day, selectedDate);
-                        const isPast = day < new Date();
+                        const dayStart = new Date(day);
+                        dayStart.setHours(0, 0, 0, 0);
+                        const isPast = dayStart < today;
                         
                         return (
                           <button
