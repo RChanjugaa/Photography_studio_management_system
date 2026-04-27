@@ -41,6 +41,7 @@ app.use('/api/payments', require('./routes/payments'));
 app.use('/api/gallery', require('./routes/gallery'));
 app.use('/api/feedback', require('./routes/feedback'));
 app.use('/api/packages', require('./routes/packages'));
+app.use('/api/followups', require('./routes/followups'));
 
 
 // Database initialization and server start
@@ -228,6 +229,8 @@ const createTables = async () => {
       )
     `);
 
+    
+
     // Ensure booking_id is nullable (photos can be uploaded without a booking)
     try {
       await connection.execute(`
@@ -370,6 +373,22 @@ await connection.execute(`
     active BOOLEAN DEFAULT true,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+  )
+`);
+
+await connection.execute(`
+  CREATE TABLE IF NOT EXISTS client_followups (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    client_id INT,
+    note TEXT,
+    followup_date DATE,
+    priority ENUM('low','medium','high') DEFAULT 'medium',
+    status ENUM('pending','done') DEFAULT 'pending',
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (client_id) REFERENCES clients(id) ON DELETE CASCADE,
+    INDEX idx_client_id (client_id),
+    INDEX idx_followup_date (followup_date),
+    INDEX idx_status (status)
   )
 `);
 

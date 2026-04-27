@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router';
-import { Search, Plus, Edit, Trash2, Eye, EyeOff, UserCheck, UserX, Mail, Phone, Calendar, X, Shield, ShieldCheck, Printer } from 'lucide-react';
+import { Search, Plus, Edit, Trash2, Eye, EyeOff, UserCheck, UserX, Mail, Phone, Calendar, X, Shield, ShieldCheck, Printer, AlertCircle, ChevronDown, Check, Clock } from 'lucide-react';
 import { Button } from '../../components/ui/button';
 import { Input } from '../../components/ui/input';
 import { Label } from '../../components/ui/label';
@@ -79,9 +79,22 @@ export default function AdminClients() {
   const [loadingClients, setLoadingClients] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   const [statusFilter, setStatusFilter] = useState('all');
+  const [sortBy, setSortBy] = useState('a-z');
+  const [dateFilter, setDateFilter] = useState('all');
   const [showClientDrawer, setShowClientDrawer] = useState(false);
   const [currentClient, setCurrentClient] = useState<any>(null);
   const [isEditing, setIsEditing] = useState(false);
+  const [expandedClientId, setExpandedClientId] = useState<number | null>(null);
+  const [followUps, setFollowUps] = useState<any[]>([]);
+  const [todayFollowUps, setTodayFollowUps] = useState<any[]>([]);
+  const [showFollowUpModal, setShowFollowUpModal] = useState(false);
+  const [selectedClientForFollowUp, setSelectedClientForFollowUp] = useState<any>(null);
+  const [editingFollowUp, setEditingFollowUp] = useState<any>(null);
+  const [followUpForm, setFollowUpForm] = useState({
+    note: '',
+    followUpDate: new Date().toISOString().split('T')[0],
+    priority: 'medium'
+  });
 
   // Check admin authentication + load clients
   useEffect(() => {
@@ -92,6 +105,8 @@ export default function AdminClients() {
       return;
     }
     fetchClients();
+    fetchFollowUps();
+    fetchTodayFollowUps();
   }, [navigate]);
 
   const fetchClients = async () => {
@@ -125,6 +140,30 @@ export default function AdminClients() {
     }
   };
 
+  const fetchFollowUps = async () => {
+    try {
+      const response = await fetch('http://localhost:5000/api/followups');
+      const data = await response.json();
+      if (data.success && Array.isArray(data.data)) {
+        setFollowUps(data.data);
+      }
+    } catch (error) {
+      console.error('Error fetching follow-ups:', error);
+    }
+  };
+
+  const fetchTodayFollowUps = async () => {
+    try {
+      const response = await fetch('http://localhost:5000/api/followups/today');
+      const data = await response.json();
+      if (data.success && Array.isArray(data.data)) {
+        setTodayFollowUps(data.data);
+      }
+    } catch (error) {
+      console.error('Error fetching today follow-ups:', error);
+    }
+  };
+
   // Client form state
   const [clientForm, setClientForm] = useState({
     firstName: '',
@@ -135,13 +174,35 @@ export default function AdminClients() {
   });
 
   // Filter clients based on search and status
-  const filteredClients = clients.filter(client => {
-    const matchesSearch = `${client.firstName} ${client.lastName} ${client.email}`
-      .toLowerCase()
-      .includes(searchQuery.toLowerCase());
-    const matchesStatus = statusFilter === 'all' || client.status === statusFilter;
-    return matchesSearch && matchesStatus;
-  });
+  const filteredClients = clients
+    .filter(client => {
+      const matchesSearch = `${client.firstName} ${client.lastName} ${client.email}`
+        .toLowerCase()
+        .includes(searchQuery.toLowerCase());
+      const matchesStatus = statusFilter === 'all' || client.status === statusFilter;
+      
+      // Date filter for last login
+      let matchesDate = true;
+      if (dateFilter !== 'all') {
+        const today = new Date();
+        const clientDate = new Date(client.lastLogin);
+        const daysDiff = Math.floor((today.getTime() - clientDate.getTime()) / (1000 * 60 * 60 * 24));
+        
+        if (dateFilter === 'today') matchesDate = daysDiff === 0;
+        if (dateFilter === '7days') matchesDate = daysDiff >= 0 && daysDiff <= 7;
+        if (dateFilter === 'overdue') matchesDate = daysDiff > 7 && client.lastLogin;
+      }
+      
+      return matchesSearch && matchesStatus && matchesDate;
+    })
+    .sort((a, b) => {
+      if (sortBy === 'a-z') {
+        return `${a.firstName} ${a.lastName}`.localeCompare(`${b.firstName} ${b.lastName}`);
+      } else if (sortBy === 'z-a') {
+        return `${b.firstName} ${b.lastName}`.localeCompare(`${a.firstName} ${a.lastName}`);
+      }
+      return 0;
+    });
 
   const handleEditClient = (client: any) => {
     setCurrentClient(client);
@@ -229,6 +290,122 @@ export default function AdminClients() {
         : client
     ));
     toast.success('Client status updated');
+  };
+
+  const handleAddFollowUp = (client: any) => {
+    setSelectedClientForFollowUp(client);
+    setEditingFollowUp(null);
+    setFollowUpForm({ note: '', followUpDate: new Date().toISOString().split('T')[0], priority: 'medium' });
+    setShowFollowUpModal(true);
+  };
+
+  const handleEditFollowUp = (followUp: any) => {
+    setEditingFollowUp(followUp);
+    setFollowUpForm({
+      note: followUp.note,
+      followUpDate: followUp.follow_up_date?.split('T')[0] || '',
+      priority: followUp.priority
+    });
+    setShowFollowUpModal(true);
+  };
+
+  const handleSaveFollowUp = async () => {
+    if (!followUpForm.note.trim() || !followUpForm.followUpDate) {
+      toast.error('Please fill in all fields');
+      return;
+    }
+
+    try {
+      if (editingFollowUp?.id) {
+        // Update
+        const response = await fetch(`http://localhost:5000/api/followups/${editingFollowUp.id}`, {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            note: followUpForm.note,
+            follow_up_date: followUpForm.followUpDate,
+            priority: followUpForm.priority,
+            status: editingFollowUp.status
+          })
+        });
+        if (response.ok) {
+          toast.success('Follow-up updated');
+          await fetchFollowUps();
+          setShowFollowUpModal(false);
+        }
+      } else {
+        // Create
+        const response = await fetch('http://localhost:5000/api/followups', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            client_id: selectedClientForFollowUp.id,
+            note: followUpForm.note,
+            follow_up_date: followUpForm.followUpDate,
+            priority: followUpForm.priority,
+            status: 'pending'
+          })
+        });
+        if (response.ok) {
+          toast.success('Follow-up created');
+          await fetchFollowUps();
+          await fetchTodayFollowUps();
+          setShowFollowUpModal(false);
+        }
+      }
+    } catch (error) {
+      console.error('Error saving follow-up:', error);
+      toast.error('Failed to save follow-up');
+    }
+  };
+
+  const handleDeleteFollowUp = async (followUpId: number) => {
+    if (!confirm('Delete this follow-up?')) return;
+    try {
+      const response = await fetch(`http://localhost:5000/api/followups/${followUpId}`, { method: 'DELETE' });
+      if (response.ok) {
+        toast.success('Follow-up deleted');
+        await fetchFollowUps();
+        await fetchTodayFollowUps();
+      }
+    } catch (error) {
+      console.error('Error deleting follow-up:', error);
+      toast.error('Failed to delete follow-up');
+    }
+  };
+
+  const handleMarkDone = async (followUpId: number) => {
+    try {
+      const followUp = followUps.find(f => f.id === followUpId);
+      if (!followUp) return;
+
+      const response = await fetch(`http://localhost:5000/api/followups/${followUpId}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ ...followUp, status: 'completed' })
+      });
+      if (response.ok) {
+        toast.success('Follow-up marked as done');
+        await fetchFollowUps();
+        await fetchTodayFollowUps();
+      }
+    } catch (error) {
+      console.error('Error marking follow-up done:', error);
+      toast.error('Failed to update follow-up');
+    }
+  };
+
+  const getClientFollowUps = (clientId: number) => {
+    return followUps.filter(f => f.client_id === clientId);
+  };
+
+  const getPriorityBadgeColor = (priority: string) => {
+    switch(priority) {
+      case 'high': return 'bg-red-900/30 text-red-400 border-red-800';
+      case 'medium': return 'bg-yellow-900/30 text-yellow-400 border-yellow-800';
+      case 'low': return 'bg-green-900/30 text-green-400 border-green-800';
+      default: return 'bg-gray-900/30 text-gray-400 border-gray-800';
+    }
   };
 
   const handlePrintClient = (client: any) => {
@@ -564,6 +741,20 @@ export default function AdminClients() {
             <p className="text-gray-400">Manage client accounts, login status, and registration details</p>
           </div>
 
+          {/* Follow-up Alert Banner */}
+          {todayFollowUps.length > 0 && (
+            <motion.div
+              initial={{ opacity: 0, y: -10 }}
+              animate={{ opacity: 1, y: 0 }}
+              className="mb-6 bg-yellow-900/20 border border-yellow-800 rounded-lg p-4 flex items-center gap-3"
+            >
+              <AlertCircle className="size-5 text-yellow-400 flex-shrink-0" />
+              <p className="text-yellow-300">
+                ⚠️ <strong>{todayFollowUps.length}</strong> follow-up{todayFollowUps.length > 1 ? 's' : ''} pending today
+              </p>
+            </motion.div>
+          )}
+
           {/* Stats Cards */}
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-6 mb-8">
             <Card className="border-2 border-gray-800 bg-gradient-to-br from-[#2a0f0f] to-black p-6">
@@ -627,7 +818,7 @@ export default function AdminClients() {
               </div>
             </div>
             <Select value={statusFilter} onValueChange={setStatusFilter}>
-              <SelectTrigger className="w-full sm:w-48 bg-gray-900 border-gray-700 text-white">
+              <SelectTrigger className="w-full sm:w-40 bg-gray-900 border-gray-700 text-white">
                 <SelectValue placeholder="Filter by status" />
               </SelectTrigger>
               <SelectContent className="bg-gray-900 border-gray-700">
@@ -635,6 +826,26 @@ export default function AdminClients() {
                 <SelectItem value="active">Active</SelectItem>
                 <SelectItem value="inactive">Inactive</SelectItem>
                 <SelectItem value="pending">Pending</SelectItem>
+              </SelectContent>
+            </Select>
+            <Select value={sortBy} onValueChange={setSortBy}>
+              <SelectTrigger className="w-full sm:w-36 bg-gray-900 border-gray-700 text-white">
+                <SelectValue placeholder="Sort" />
+              </SelectTrigger>
+              <SelectContent className="bg-gray-900 border-gray-700">
+                <SelectItem value="a-z">A–Z</SelectItem>
+                <SelectItem value="z-a">Z–A</SelectItem>
+              </SelectContent>
+            </Select>
+            <Select value={dateFilter} onValueChange={setDateFilter}>
+              <SelectTrigger className="w-full sm:w-40 bg-gray-900 border-gray-700 text-white">
+                <SelectValue placeholder="Date filter" />
+              </SelectTrigger>
+              <SelectContent className="bg-gray-900 border-gray-700">
+                <SelectItem value="all">All Dates</SelectItem>
+                <SelectItem value="today">Today</SelectItem>
+                <SelectItem value="7days">Last 7 Days</SelectItem>
+                <SelectItem value="overdue">Overdue</SelectItem>
               </SelectContent>
             </Select>
             <Button
@@ -673,19 +884,12 @@ export default function AdminClients() {
                   </tr>
                 </thead>
                 <tbody>
-                  {filteredClients.map((client) => (
-                    <motion.tr
-                      key={client.id}
-                      initial={{ opacity: 0 }}
-                      animate={{ opacity: 1 }}
-                      className="border-b border-gray-800/50 hover:bg-gray-900/30"
-                    >
+                  {filteredClients.flatMap((client) => [
+                    <motion.tr key={client.id}>
                       <td className="px-6 py-4">
                         <div className="flex items-center gap-3">
                           <div className="w-10 h-10 bg-red-700 rounded-full flex items-center justify-center">
-                            <span className="text-white font-semibold">
-                              {client.firstName[0]}{client.lastName[0]}
-                            </span>
+                            <span className="text-white font-semibold">{client.firstName[0]}{client.lastName[0]}</span>
                           </div>
                           <div>
                             <p className="text-white font-medium">{client.firstName} {client.lastName}</p>
@@ -699,15 +903,9 @@ export default function AdminClients() {
                           {client.phone}
                         </div>
                       </td>
-                      <td className="px-6 py-4">
-                        {getStatusBadge(client.status)}
-                      </td>
-                      <td className="px-6 py-4 text-gray-300">
-                        {new Date(client.registrationDate).toLocaleDateString()}
-                      </td>
-                      <td className="px-6 py-4 text-gray-300">
-                        {client.lastLogin ? new Date(client.lastLogin).toLocaleDateString() : 'Never'}
-                      </td>
+                      <td className="px-6 py-4">{getStatusBadge(client.status)}</td>
+                      <td className="px-6 py-4 text-gray-300">{new Date(client.registrationDate).toLocaleDateString()}</td>
+                      <td className="px-6 py-4 text-gray-300">{client.lastLogin ? new Date(client.lastLogin).toLocaleDateString() : 'Never'}</td>
                       <td className="px-6 py-4">
                         <div className="text-gray-300">
                           <p className="font-medium">{client.totalBookings} bookings</p>
@@ -716,44 +914,48 @@ export default function AdminClients() {
                       </td>
                       <td className="px-6 py-4">
                         <div className="flex items-center gap-2">
-                          <Button
-                            size="sm"
-                            variant="outline"
-                            onClick={() => handlePrintClient(client)}
-                            className="border-yellow-600 text-yellow-400 hover:bg-yellow-600/10"
-                          >
-                            <Printer className="size-4" />
-                          </Button>
-                          <Button
-                            size="sm"
-                            variant="outline"
-                            onClick={() => handleEditClient(client)}
-                            className="border-gray-700 text-gray-300 hover:bg-gray-800"
-                          >
-                            <Edit className="size-4" />
-                          </Button>
-                          <Button
-                            size="sm"
-                            variant="outline"
-                            onClick={() => toggleClientStatus(client.id)}
-                            className={`border-gray-700 hover:bg-gray-800 ${
-                              client.status === 'active' ? 'text-red-400' : 'text-green-400'
-                            }`}
-                          >
-                            {client.status === 'active' ? <EyeOff className="size-4" /> : <Eye className="size-4" />}
-                          </Button>
-                          <Button
-                            size="sm"
-                            variant="outline"
-                            onClick={() => handleDeleteClient(client.id)}
-                            className="border-red-700 text-red-400 hover:bg-red-900"
-                          >
-                            <Trash2 className="size-4" />
-                          </Button>
+                          <Button size="sm" variant="outline" onClick={() => handleAddFollowUp(client)} className="border-blue-700 text-blue-400 hover:bg-blue-900/20"><Clock className="size-4" /></Button>
+                          <Button size="sm" variant="outline" onClick={() => setExpandedClientId(expandedClientId === client.id ? null : client.id)} className="border-gray-700 text-gray-300 hover:bg-gray-800"><ChevronDown className="size-4" /></Button>
+                          <Button size="sm" variant="outline" onClick={() => handlePrintClient(client)} className="border-yellow-600 text-yellow-400 hover:bg-yellow-600/10"><Printer className="size-4" /></Button>
+                          <Button size="sm" variant="outline" onClick={() => handleEditClient(client)} className="border-gray-700 text-gray-300 hover:bg-gray-800"><Edit className="size-4" /></Button>
+                          <Button size="sm" variant="outline" onClick={() => toggleClientStatus(client.id)} className={`border-gray-700 hover:bg-gray-800 ${client.status === 'active' ? 'text-red-400' : 'text-green-400'}`}>{client.status === 'active' ? <EyeOff className="size-4" /> : <Eye className="size-4" />}</Button>
+                          <Button size="sm" variant="outline" onClick={() => handleDeleteClient(client.id)} className="border-red-700 text-red-400 hover:bg-red-900"><Trash2 className="size-4" /></Button>
                         </div>
                       </td>
-                    </motion.tr>
-                  ))}
+                    </motion.tr>,
+                    ...(expandedClientId === client.id ? [
+                      <motion.tr key={`${client.id}-followups`} className="bg-gray-900/50 border-b border-gray-800/50">
+                        <td colSpan={7} className="px-6 py-4">
+                          <div className="space-y-3">
+                            <h4 className="text-sm font-medium text-gray-300">Follow-ups</h4>
+                            {getClientFollowUps(client.id).length === 0 ? (
+                              <p className="text-sm text-gray-500">No follow-ups</p>
+                            ) : (
+                              <div className="space-y-2">
+                                {getClientFollowUps(client.id).map((followUp) => (
+                                  <div key={followUp.id} className="flex items-start justify-between bg-gray-800/50 p-3 rounded border border-gray-700 text-sm">
+                                    <div className="flex-1">
+                                      <p className="text-gray-300">{followUp.note}</p>
+                                      <div className="flex items-center gap-2 mt-1">
+                                        <span className="text-xs text-gray-500">{new Date(followUp.follow_up_date).toLocaleDateString()}</span>
+                                        <Badge className={`${getPriorityBadgeColor(followUp.priority)} text-xs`}>{followUp.priority}</Badge>
+                                        <Badge className={followUp.status === 'completed' ? 'bg-green-900 text-green-400' : 'bg-yellow-900 text-yellow-400'}>{followUp.status}</Badge>
+                                      </div>
+                                    </div>
+                                    <div className="flex items-center gap-1">
+                                      {followUp.status !== 'completed' && <Button size="sm" variant="ghost" onClick={() => handleMarkDone(followUp.id)} className="text-green-400"><Check className="size-4" /></Button>}
+                                      <Button size="sm" variant="ghost" onClick={() => handleEditFollowUp(followUp)} className="text-gray-400"><Edit className="size-3" /></Button>
+                                      <Button size="sm" variant="ghost" onClick={() => handleDeleteFollowUp(followUp.id)} className="text-red-400"><Trash2 className="size-3" /></Button>
+                                    </div>
+                                  </div>
+                                ))}
+                              </div>
+                            )}
+                          </div>
+                        </td>
+                      </motion.tr>
+                    ] : [])
+                  ])}
                 </tbody>
               </table>
             </div>
@@ -853,6 +1055,100 @@ export default function AdminClients() {
                     <Button
                       variant="outline"
                       onClick={() => setShowClientDrawer(false)}
+                      className="flex-1 border-gray-700 text-gray-300 hover:bg-gray-800"
+                    >
+                      Cancel
+                    </Button>
+                  </div>
+                </motion.div>
+              </motion.div>
+            )}
+          </AnimatePresence>
+
+          {/* Follow-up Modal */}
+          <AnimatePresence>
+            {showFollowUpModal && (
+              <motion.div
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+                className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4"
+                onClick={() => setShowFollowUpModal(false)}
+              >
+                <motion.div
+                  initial={{ scale: 0.9, opacity: 0 }}
+                  animate={{ scale: 1, opacity: 1 }}
+                  exit={{ scale: 0.9, opacity: 0 }}
+                  onClick={(e) => e.stopPropagation()}
+                  className="bg-gray-900 border-2 border-gray-700 rounded-lg p-6 w-full max-w-md"
+                >
+                  <div className="flex items-center justify-between mb-6">
+                    <h2 className="text-xl font-serif text-yellow-500 uppercase">
+                      {editingFollowUp ? 'Edit Follow-up' : 'Add Follow-up'}
+                    </h2>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => setShowFollowUpModal(false)}
+                      className="text-gray-400 hover:text-white"
+                    >
+                      <X className="size-4" />
+                    </Button>
+                  </div>
+
+                  {selectedClientForFollowUp && (
+                    <p className="text-sm text-gray-400 mb-4">
+                      for <strong className="text-gray-300">{selectedClientForFollowUp.firstName} {selectedClientForFollowUp.lastName}</strong>
+                    </p>
+                  )}
+
+                  <div className="space-y-4">
+                    <div>
+                      <Label htmlFor="note" className="text-gray-300">Note *</Label>
+                      <textarea
+                        id="note"
+                        value={followUpForm.note}
+                        onChange={(e) => setFollowUpForm({...followUpForm, note: e.target.value})}
+                        placeholder="Add follow-up note..."
+                        className="w-full bg-gray-800 border border-gray-700 text-white rounded px-3 py-2 mt-1 text-sm resize-none"
+                        rows={3}
+                      />
+                    </div>
+                    <div>
+                      <Label htmlFor="date" className="text-gray-300">Follow-up Date *</Label>
+                      <Input
+                        id="date"
+                        type="date"
+                        value={followUpForm.followUpDate}
+                        onChange={(e) => setFollowUpForm({...followUpForm, followUpDate: e.target.value})}
+                        className="bg-gray-800 border-gray-700 text-white mt-1"
+                      />
+                    </div>
+                    <div>
+                      <Label htmlFor="priority" className="text-gray-300">Priority</Label>
+                      <Select value={followUpForm.priority} onValueChange={(value) => setFollowUpForm({...followUpForm, priority: value})}>
+                        <SelectTrigger className="bg-gray-800 border-gray-700 text-white mt-1">
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent className="bg-gray-800 border-gray-700">
+                          <SelectItem value="low">Low</SelectItem>
+                          <SelectItem value="medium">Medium</SelectItem>
+                          <SelectItem value="high">High</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+                  </div>
+
+                  <div className="flex gap-3 mt-6">
+                    <Button
+                      onClick={handleSaveFollowUp}
+                      className="flex-1 bg-red-700 hover:bg-red-800"
+                    >
+                      {editingFollowUp ? 'Update' : 'Create'} Follow-up
+                    </Button>
+                    <Button
+                      variant="outline"
+                      onClick={() => setShowFollowUpModal(false)}
                       className="flex-1 border-gray-700 text-gray-300 hover:bg-gray-800"
                     >
                       Cancel
