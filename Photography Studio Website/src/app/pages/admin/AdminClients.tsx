@@ -1,6 +1,7 @@
+
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router';
-import { Search, Plus, Edit, Trash2, Eye, EyeOff, UserCheck, UserX, Mail, Phone, Calendar, X, Shield, ShieldCheck, Printer, AlertCircle, ChevronDown, Check, Clock } from 'lucide-react';
+import { Search, Plus, Edit, Trash2, Eye, EyeOff, UserCheck, UserX, Mail, Phone, Calendar, X, Shield, ShieldCheck, Printer, AlertCircle, ChevronDown, Check, Clock, User, Building, MapPin, Sparkles, ArrowLeft } from 'lucide-react';
 import { Button } from '../../components/ui/button';
 import { Input } from '../../components/ui/input';
 import { Label } from '../../components/ui/label';
@@ -170,8 +171,19 @@ export default function AdminClients() {
     lastName: '',
     email: '',
     phone: '',
-    status: 'active'
+    status: 'active',
+    company: '',
+    address: '',
+    dateOfBirth: '',
+    notes: ''
   });
+
+  // Generate unique client ID
+  const generateClientID = () => {
+    const timestamp = Date.now().toString(36).toUpperCase();
+    const random = Math.random().toString(36).substring(2, 5).toUpperCase();
+    return `CLT-${timestamp}${random}`;
+  };
 
   // Filter clients based on search and status
   const filteredClients = clients
@@ -211,17 +223,45 @@ export default function AdminClients() {
       lastName: client.lastName,
       email: client.email,
       phone: client.phone,
-      status: client.status
+      status: client.status,
+      company: client.company || '',
+      address: client.address || '',
+      dateOfBirth: client.dateOfBirth || '',
+      notes: client.notes || ''
     });
     setIsEditing(true);
     setShowClientDrawer(true);
   };
 
+
+
+  // ================= VALIDATION =================
   const handleSaveClient = async () => {
-    if (!clientForm.firstName || !clientForm.lastName || !clientForm.email) {
-      toast.error('Please fill in all required fields');
-      return;
-    }
+if (!clientForm.firstName.trim() || !clientForm.lastName.trim() || !clientForm.email.trim()) {
+  toast.error('Please fill in all required fields');
+  return;
+}
+
+// Email validation
+const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+if (!emailRegex.test(clientForm.email)) {
+  toast.error("Invalid email address");
+  return;
+}
+
+// Phone validation (+94 format)
+const phoneRegex = /^\+94\d{9}$/;
+if (clientForm.phone && !phoneRegex.test(clientForm.phone)) {
+  toast.error("Phone number must be in format +947XXXXXXXX");
+  return;
+}
+
+// Name validation (no numbers)
+const nameRegex = /^[A-Za-z\s]+$/;
+if (!nameRegex.test(clientForm.firstName) || !nameRegex.test(clientForm.lastName)) {
+  toast.error("Name cannot contain numbers or special characters");
+  return;
+}
 
     const payload = {
       firstName: clientForm.firstName,
@@ -229,6 +269,10 @@ export default function AdminClients() {
       email: clientForm.email,
       phone: clientForm.phone,
       status: clientForm.status,
+      company: clientForm.company,
+      address: clientForm.address,
+      dateOfBirth: clientForm.dateOfBirth,
+      notes: clientForm.notes,
     };
 
     try {
@@ -273,7 +317,11 @@ export default function AdminClients() {
         lastName: '',
         email: '',
         phone: '',
-        status: 'active'
+        status: 'active',
+        company: '',
+        address: '',
+        dateOfBirth: '',
+        notes: ''
       });
     }
   };
@@ -323,39 +371,56 @@ export default function AdminClients() {
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
             note: followUpForm.note,
-            follow_up_date: followUpForm.followUpDate,
+            followup_date: followUpForm.followUpDate,
             priority: followUpForm.priority,
             status: editingFollowUp.status
           })
         });
-        if (response.ok) {
-          toast.success('Follow-up updated');
+        const data = await response.json();
+        if (response.ok && data.success) {
+          toast.success('Follow-up updated successfully');
           await fetchFollowUps();
+          await fetchTodayFollowUps();
           setShowFollowUpModal(false);
+          setFollowUpForm({ note: '', followUpDate: new Date().toISOString().split('T')[0], priority: 'medium' });
+        } else {
+          toast.error(data.message || 'Failed to update follow-up');
         }
       } else {
-        // Create
+        // Create new follow-up
+        if (!selectedClientForFollowUp?.id) {
+          toast.error('No client selected');
+          return;
+        }
+
         const response = await fetch('http://localhost:5000/api/followups', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
             client_id: selectedClientForFollowUp.id,
             note: followUpForm.note,
-            follow_up_date: followUpForm.followUpDate,
+            followup_date: followUpForm.followUpDate,
             priority: followUpForm.priority,
             status: 'pending'
           })
         });
-        if (response.ok) {
-          toast.success('Follow-up created');
+        const data = await response.json();
+        if (response.ok && data.success) {
+          toast.success('Follow-up created successfully');
           await fetchFollowUps();
           await fetchTodayFollowUps();
           setShowFollowUpModal(false);
+          setFollowUpForm({ note: '', followUpDate: new Date().toISOString().split('T')[0], priority: 'medium' });
+          setSelectedClientForFollowUp(null);
+          setEditingFollowUp(null);
+        } else {
+          toast.error(data.message || 'Failed to create follow-up');
+          console.error('Follow-up creation error:', data);
         }
       }
     } catch (error) {
       console.error('Error saving follow-up:', error);
-      toast.error('Failed to save follow-up');
+      toast.error('Failed to save follow-up: ' + error.message);
     }
   };
 
@@ -518,7 +583,7 @@ export default function AdminClients() {
           }
           .field span {
             font-size: 13px;
-            color: #1a1a1a;
+            color: #1a1a1a; 
             font-weight: 600;
           }
 
@@ -734,7 +799,233 @@ export default function AdminClients() {
     <>
       <AdminNavigation />
       <div className="min-h-screen bg-black py-12">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        {showClientDrawer ? (
+          <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
+            {/* Back Button */}
+            <button
+              onClick={() => {
+                setShowClientDrawer(false);
+                setCurrentClient(null);
+                setIsEditing(false);
+                setClientForm({
+                  firstName: '',
+                  lastName: '',
+                  email: '',
+                  phone: '',
+                  status: 'active',
+                  company: '',
+                  address: '',
+                  dateOfBirth: '',
+                  notes: ''
+                });
+              }}
+              className="flex items-center gap-2 text-sm text-gray-400 hover:text-yellow-500 mb-8 transition-colors"
+            >
+              <ArrowLeft className="size-4" />
+              Back to Clients
+            </button>
+
+            {/* Form Card */}
+            <Card className="border-2 border-gray-800 bg-gradient-to-br from-[#2a0f0f] to-black p-8">
+              <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.3 }}
+              >
+                {/* Header */}
+                <div className="mb-8">
+                  <div className="flex items-center gap-3 mb-2">
+                    {isEditing ? (
+                      <Edit className="size-8 text-yellow-500" />
+                    ) : (
+                      <Sparkles className="size-8 text-yellow-500" />
+                    )}
+                    <h1 className="text-3xl font-serif text-yellow-500 uppercase">
+                      {isEditing ? 'Edit Client Profile' : 'Create New Client'}
+                    </h1>
+                  </div>
+                  <p className="text-gray-400 ml-11">{isEditing ? 'Update client information' : 'Add a new client to your system'}</p>
+                </div>
+
+                {/* Unique Client ID for new clients */}
+                {!isEditing && (
+                  <motion.div
+                    initial={{ opacity: 0, y: -10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    className="mb-8 bg-gradient-to-r from-yellow-500/20 to-red-700/20 border-2 border-yellow-500/50 rounded-lg p-4 flex items-center justify-between"
+                  >
+                    <div>
+                      <p className="text-xs text-yellow-400 uppercase tracking-widest font-semibold">Auto-Generated Client ID</p>
+                      <p className="text-2xl font-mono text-white font-bold mt-1">{generateClientID()}</p>
+                    </div>
+                    <Shield className="size-8 text-yellow-400" />
+                  </motion.div>
+                )}
+
+                {/* Form Sections */}
+                <div className="space-y-8">
+                  {/* Personal Information */}
+                  <div>
+                    <h3 className="text-lg font-semibold text-yellow-500 uppercase tracking-wider mb-6 flex items-center gap-2">
+                      <User className="size-5" />
+                      Personal Information
+                    </h3>
+                    <div className="grid md:grid-cols-2 gap-6">
+                      <div>
+                        <Label htmlFor="firstName" className="text-gray-300 text-sm font-semibold">First Name *</Label>
+                        <Input
+                          id="firstName"
+                          placeholder="John"
+                          value={clientForm.firstName}
+                          onChange={(e) => setClientForm({...clientForm, firstName: e.target.value})}
+                          className="bg-gray-900 border-gray-700 text-white mt-2 focus:border-yellow-500 focus:ring-yellow-500/20"
+                        />
+                      </div>
+                      <div>
+                        <Label htmlFor="lastName" className="text-gray-300 text-sm font-semibold">Last Name *</Label>
+                        <Input
+                          id="lastName"
+                          placeholder="Doe"
+                          value={clientForm.lastName}
+                          onChange={(e) => setClientForm({...clientForm, lastName: e.target.value})}
+                          className="bg-gray-900 border-gray-700 text-white mt-2 focus:border-yellow-500 focus:ring-yellow-500/20"
+                        />
+                      </div>
+                      <div>
+                        <Label htmlFor="dateOfBirth" className="text-gray-300 text-sm font-semibold">Date of Birth</Label>
+                        <Input
+                          id="dateOfBirth"
+                          type="date"
+                          value={clientForm.dateOfBirth}
+                          onChange={(e) => setClientForm({...clientForm, dateOfBirth: e.target.value})}
+                          className="bg-gray-900 border-gray-700 text-white mt-2 focus:border-yellow-500 focus:ring-yellow-500/20"
+                        />
+                      </div>
+                      <div>
+                        <Label htmlFor="status" className="text-gray-300 text-sm font-semibold">Status *</Label>
+                        <Select value={clientForm.status} onValueChange={(value) => setClientForm({...clientForm, status: value})}>
+                          <SelectTrigger className="bg-gray-900 border-gray-700 text-white mt-2 focus:border-yellow-500">
+                            <SelectValue />
+                          </SelectTrigger>
+                          <SelectContent className="bg-gray-900 border-gray-700">
+                            <SelectItem value="active">Active</SelectItem>
+                            <SelectItem value="inactive">Inactive</SelectItem>
+                            <SelectItem value="pending">Pending</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Contact Information */}
+                  <div className="border-t border-gray-800 pt-8">
+                    <h3 className="text-lg font-semibold text-yellow-500 uppercase tracking-wider mb-6 flex items-center gap-2">
+                      <Mail className="size-5" />
+                      Contact Information
+                    </h3>
+                    <div className="grid md:grid-cols-2 gap-6">
+                      <div className="md:col-span-2">
+                        <Label htmlFor="email" className="text-gray-300 text-sm font-semibold">Email Address *</Label>
+                        <Input
+                          id="email"
+                          type="email"
+                          placeholder="john@example.com"
+                          value={clientForm.email}
+                          onChange={(e) => setClientForm({...clientForm, email: e.target.value})}
+                          className="bg-gray-900 border-gray-700 text-white mt-2 focus:border-yellow-500 focus:ring-yellow-500/20"
+                        />
+                      </div>
+                      <div>
+                        <Label htmlFor="phone" className="text-gray-300 text-sm font-semibold">Phone Number</Label>
+                        <Input
+                          id="phone"
+                          placeholder="+94 77 XXX XXXX"
+                          value={clientForm.phone}
+                          onChange={(e) => setClientForm({...clientForm, phone: e.target.value})}
+                          className="bg-gray-900 border-gray-700 text-white mt-2 focus:border-yellow-500 focus:ring-yellow-500/20"
+                        />
+                      </div>
+                      <div>
+                        <Label htmlFor="company" className="text-gray-300 text-sm font-semibold">Company</Label>
+                        <Input
+                          id="company"
+                          placeholder="Company Name"
+                          value={clientForm.company}
+                          onChange={(e) => setClientForm({...clientForm, company: e.target.value})}
+                          className="bg-gray-900 border-gray-700 text-white mt-2 focus:border-yellow-500 focus:ring-yellow-500/20"
+                        />
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Additional Information */}
+                  <div className="border-t border-gray-800 pt-8">
+                    <h3 className="text-lg font-semibold text-yellow-500 uppercase tracking-wider mb-6 flex items-center gap-2">
+                      <MapPin className="size-5" />
+                      Additional Information
+                    </h3>
+                    <div className="space-y-6">
+                      <div>
+                        <Label htmlFor="address" className="text-gray-300 text-sm font-semibold">Address</Label>
+                        <Input
+                          id="address"
+                          placeholder="Street address, city, country"
+                          value={clientForm.address}
+                          onChange={(e) => setClientForm({...clientForm, address: e.target.value})}
+                          className="bg-gray-900 border-gray-700 text-white mt-2 focus:border-yellow-500 focus:ring-yellow-500/20"
+                        />
+                      </div>
+                      <div>
+                        <Label htmlFor="notes" className="text-gray-300 text-sm font-semibold">Notes</Label>
+                        <textarea
+                          id="notes"
+                          placeholder="Add any additional notes about the client..."
+                          value={clientForm.notes}
+                          onChange={(e) => setClientForm({...clientForm, notes: e.target.value})}
+                          className="w-full bg-gray-900 border border-gray-700 text-white rounded-lg px-4 py-2 mt-2 resize-none focus:border-yellow-500 focus:ring-1 focus:ring-yellow-500/20"
+                          rows={4}
+                        />
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Action Buttons */}
+                  <div className="border-t border-gray-800 pt-8 flex gap-4">
+                    <Button
+                      onClick={handleSaveClient}
+                      className="flex-1 bg-gradient-to-r from-red-700 to-red-800 hover:from-red-600 hover:to-red-700 text-white font-semibold h-12"
+                    >
+                      {isEditing ? 'Update Client' : 'Create Client'}
+                    </Button>
+                    <Button
+                      onClick={() => {
+                        setShowClientDrawer(false);
+                        setCurrentClient(null);
+                        setIsEditing(false);
+                        setClientForm({
+                          firstName: '',
+                          lastName: '',
+                          email: '',
+                          phone: '',
+                          status: 'active',
+                          company: '',
+                          address: '',
+                          dateOfBirth: '',
+                          notes: ''
+                        });
+                      }}
+                      variant="outline"
+                      className="flex-1 border-gray-700 text-gray-300 hover:bg-gray-800 h-12"
+                    >
+                      Cancel
+                    </Button>
+                  </div>
+                </div>
+              </motion.div>
+            </Card>
+          </div>
+        ) : (
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           {/* Header */}
           <div className="mb-8">
             <h1 className="text-3xl font-serif text-yellow-500 mb-2 uppercase">Client Management</h1>
@@ -857,7 +1148,11 @@ export default function AdminClients() {
                   lastName: '',
                   email: '',
                   phone: '',
-                  status: 'active'
+                  status: 'active',
+                  company: '',
+                  address: '',
+                  dateOfBirth: '',
+                  notes: ''
                 });
                 setShowClientDrawer(true);
               }}
@@ -868,206 +1163,206 @@ export default function AdminClients() {
             </Button>
           </div>
 
-          {/* Clients Table */}
-          <Card className="border-2 border-gray-800 bg-gradient-to-br from-[#2a0f0f] to-black">
-            <div className="overflow-x-auto">
-              <table className="w-full">
-                <thead className="border-b border-gray-800">
-                  <tr className="text-left">
-                    <th className="px-6 py-4 text-gray-400 font-medium">Client</th>
-                    <th className="px-6 py-4 text-gray-400 font-medium">Contact</th>
-                    <th className="px-6 py-4 text-gray-400 font-medium">Status</th>
-                    <th className="px-6 py-4 text-gray-400 font-medium">Registration</th>
-                    <th className="px-6 py-4 text-gray-400 font-medium">Last Login</th>
-                    <th className="px-6 py-4 text-gray-400 font-medium">Bookings</th>
-                    <th className="px-6 py-4 text-gray-400 font-medium">Actions</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {filteredClients.flatMap((client) => [
-                    <motion.tr key={client.id}>
-                      <td className="px-6 py-4">
-                        <div className="flex items-center gap-3">
-                          <div className="w-10 h-10 bg-red-700 rounded-full flex items-center justify-center">
-                            <span className="text-white font-semibold">{client.firstName[0]}{client.lastName[0]}</span>
+          {/* Clients Grid */}
+          <div className="space-y-3">
+            {/* Desktop header */}
+            <div className="hidden md:grid grid-cols-12 gap-2 px-4 py-3 bg-gray-900 border border-gray-800 rounded-lg text-xs font-medium text-gray-400 uppercase tracking-wide">
+              <div className="col-span-3">Client</div>
+              <div className="col-span-2">Contact</div>
+              <div className="col-span-1">Status</div>
+              <div className="col-span-2">Registration</div>
+              <div className="col-span-2">Bookings</div>
+              <div className="col-span-2 text-right">Actions</div>
+            </div>
+
+            {/* Client rows */}
+            {loadingClients ? (
+              <Card className="border-2 border-gray-800 bg-gradient-to-br from-[#2a0f0f] to-black p-16 text-center">
+                <p className="text-gray-400">Loading clients...</p>
+              </Card>
+            ) : filteredClients.length === 0 ? (
+              <Card className="border-2 border-gray-800 bg-gradient-to-br from-[#2a0f0f] to-black p-16">
+                <div className="text-center">
+                  <div className="flex justify-center mb-4">
+                    <div className="bg-gray-800 p-6 rounded-full">
+                      <UserCheck className="size-12 text-gray-600" />
+                    </div>
+                  </div>
+                  <h3 className="text-xl font-semibold text-white mb-2">No clients found</h3>
+                  <p className="text-gray-400 mb-6">Add your first client to get started.</p>
+                  <Button
+                    onClick={() => {
+                      setIsEditing(false);
+                      setCurrentClient(null);
+                      setClientForm({
+                        firstName: '',
+                        lastName: '',
+                        email: '',
+                        phone: '',
+                        status: 'active',
+                        company: '',
+                        address: '',
+                        dateOfBirth: '',
+                        notes: ''
+                      });
+                      setShowClientDrawer(true);
+                    }}
+                    className="bg-red-700 hover:bg-red-800"
+                  >
+                    <Plus className="size-4 mr-2" />
+                    Add Client
+                  </Button>
+                </div>
+              </Card>
+            ) : (
+              filteredClients.map((client, idx) => (
+                <div key={client.id}>
+                  <motion.div
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ duration: 0.3, delay: idx * 0.03 }}
+                  >
+                    <Card className="border border-gray-800 hover:border-yellow-500/50 transition-colors bg-gradient-to-r from-[#2a0f0f] to-black">
+                      {/* Mobile layout */}
+                      <div className="block md:hidden px-3 py-3 space-y-2">
+                        <div className="flex items-start justify-between gap-2">
+                          <div className="flex items-start gap-2 flex-1">
+                            <div className="w-8 h-8 bg-red-700 rounded-full flex items-center justify-center flex-shrink-0 text-xs">
+                              <span className="text-white font-semibold text-[10px]">{client.firstName[0]}{client.lastName[0]}</span>
+                            </div>
+                            <div className="flex-1 min-w-0">
+                              <p className="text-white font-medium text-sm truncate">{client.firstName} {client.lastName}</p>
+                              <p className="text-gray-500 text-xs truncate">{client.email}</p>
+                            </div>
+                          </div>
+                          {getStatusBadge(client.status)}
+                        </div>
+
+                        <div className="grid grid-cols-2 gap-1 text-xs">
+                          <div>
+                            <p className="text-gray-600 text-[10px]">Phone</p>
+                            <p className="text-gray-300 text-xs flex items-center gap-0.5 truncate">
+                              <Phone className="size-2.5" />
+                              <span className="truncate">{client.phone || '-'}</span>
+                            </p>
                           </div>
                           <div>
-                            <p className="text-white font-medium">{client.firstName} {client.lastName}</p>
-                            <p className="text-gray-400 text-sm">{client.email}</p>
+                            <p className="text-gray-600 text-[10px]">Registered</p>
+                            <p className="text-gray-300 text-xs">{new Date(client.registrationDate).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}</p>
+                          </div>
+                          <div>
+                            <p className="text-gray-600 text-[10px]">Bookings</p>
+                            <p className="text-gray-300 text-xs font-medium">{client.totalBookings}</p>
+                          </div>
+                          <div>
+                            <p className="text-gray-600 text-[10px]">Spent</p>
+                            <p className="text-orange-400 text-xs font-medium">Rs.{(client.totalSpent || 0).toLocaleString()}</p>
                           </div>
                         </div>
-                      </td>
-                      <td className="px-6 py-4">
-                        <div className="flex items-center gap-2 text-gray-300">
-                          <Phone className="size-4" />
-                          {client.phone}
+
+                        <div className="flex gap-0.5 flex-wrap">
+                          <Button size="sm" variant="ghost" onClick={() => handleAddFollowUp(client)} className="text-blue-400 hover:bg-blue-500/10 h-7 w-7 p-0" title="Follow-up"><Clock className="size-3" /></Button>
+                          <Button size="sm" variant="ghost" onClick={() => setExpandedClientId(expandedClientId === client.id ? null : client.id)} className="text-gray-400 hover:bg-gray-500/10 h-7 w-7 p-0" title="Expand"><ChevronDown className="size-3" /></Button>
+                          <Button size="sm" variant="ghost" onClick={() => handlePrintClient(client)} className="text-yellow-400 hover:bg-yellow-500/10 h-7 w-7 p-0" title="Print"><Printer className="size-3" /></Button>
+                          <Button size="sm" variant="ghost" onClick={() => handleEditClient(client)} className="text-gray-400 hover:bg-gray-500/10 h-7 w-7 p-0" title="Edit"><Edit className="size-3" /></Button>
+                          <Button size="sm" variant="ghost" onClick={() => toggleClientStatus(client.id)} className={`hover:bg-gray-500/10 h-7 w-7 p-0 ${client.status === 'active' ? 'text-red-400' : 'text-green-400'}`} title={client.status === 'active' ? 'Deactivate' : 'Activate'}>{client.status === 'active' ? <EyeOff className="size-3" /> : <Eye className="size-3" />}</Button>
+                          <Button size="sm" variant="ghost" onClick={() => handleDeleteClient(client.id)} className="text-red-400 hover:bg-red-500/10 h-7 w-7 p-0" title="Delete"><Trash2 className="size-3" /></Button>
                         </div>
-                      </td>
-                      <td className="px-6 py-4">{getStatusBadge(client.status)}</td>
-                      <td className="px-6 py-4 text-gray-300">{new Date(client.registrationDate).toLocaleDateString()}</td>
-                      <td className="px-6 py-4 text-gray-300">{client.lastLogin ? new Date(client.lastLogin).toLocaleDateString() : 'Never'}</td>
-                      <td className="px-6 py-4">
-                        <div className="text-gray-300">
-                          <p className="font-medium">{client.totalBookings} bookings</p>
-                          <p className="text-sm text-gray-400">Rs. {client.totalSpent.toLocaleString()}</p>
+                      </div>
+
+                      {/* Desktop layout */}
+                      <div className="hidden md:grid grid-cols-12 gap-1 px-3 py-3 items-center text-xs">
+                        <div className="col-span-3 min-w-0">
+                          <div className="flex items-center gap-2">
+                            <div className="w-8 h-8 bg-red-700 rounded-full flex items-center justify-center flex-shrink-0">
+                              <span className="text-white font-semibold text-[10px]">{client.firstName[0]}{client.lastName[0]}</span>
+                            </div>
+                            <div className="flex-1 min-w-0">
+                              <p className="text-white font-medium text-xs truncate">{client.firstName} {client.lastName}</p>
+                              <p className="text-gray-500 text-[10px] truncate">{client.email}</p>
+                            </div>
+                          </div>
                         </div>
-                      </td>
-                      <td className="px-6 py-4">
-                        <div className="flex items-center gap-2">
-                          <Button size="sm" variant="outline" onClick={() => handleAddFollowUp(client)} className="border-blue-700 text-blue-400 hover:bg-blue-900/20"><Clock className="size-4" /></Button>
-                          <Button size="sm" variant="outline" onClick={() => setExpandedClientId(expandedClientId === client.id ? null : client.id)} className="border-gray-700 text-gray-300 hover:bg-gray-800"><ChevronDown className="size-4" /></Button>
-                          <Button size="sm" variant="outline" onClick={() => handlePrintClient(client)} className="border-yellow-600 text-yellow-400 hover:bg-yellow-600/10"><Printer className="size-4" /></Button>
-                          <Button size="sm" variant="outline" onClick={() => handleEditClient(client)} className="border-gray-700 text-gray-300 hover:bg-gray-800"><Edit className="size-4" /></Button>
-                          <Button size="sm" variant="outline" onClick={() => toggleClientStatus(client.id)} className={`border-gray-700 hover:bg-gray-800 ${client.status === 'active' ? 'text-red-400' : 'text-green-400'}`}>{client.status === 'active' ? <EyeOff className="size-4" /> : <Eye className="size-4" />}</Button>
-                          <Button size="sm" variant="outline" onClick={() => handleDeleteClient(client.id)} className="border-red-700 text-red-400 hover:bg-red-900"><Trash2 className="size-4" /></Button>
+
+                        <div className="col-span-2 min-w-0">
+                          <div className="flex items-center gap-1 text-gray-300 text-xs">
+                            <Phone className="size-2.5 flex-shrink-0" />
+                            <span className="truncate">{client.phone || '-'}</span>
+                          </div>
+                          <p className="text-gray-600 text-[10px] truncate">Last: {client.lastLogin ? new Date(client.lastLogin).toLocaleDateString('en-US', {month: 'short', day: 'numeric'}) : 'Never'}</p>
                         </div>
-                      </td>
-                    </motion.tr>,
-                    ...(expandedClientId === client.id ? [
-                      <motion.tr key={`${client.id}-followups`} className="bg-gray-900/50 border-b border-gray-800/50">
-                        <td colSpan={7} className="px-6 py-4">
-                          <div className="space-y-3">
-                            <h4 className="text-sm font-medium text-gray-300">Follow-ups</h4>
-                            {getClientFollowUps(client.id).length === 0 ? (
-                              <p className="text-sm text-gray-500">No follow-ups</p>
-                            ) : (
-                              <div className="space-y-2">
-                                {getClientFollowUps(client.id).map((followUp) => (
-                                  <div key={followUp.id} className="flex items-start justify-between bg-gray-800/50 p-3 rounded border border-gray-700 text-sm">
-                                    <div className="flex-1">
-                                      <p className="text-gray-300">{followUp.note}</p>
-                                      <div className="flex items-center gap-2 mt-1">
-                                        <span className="text-xs text-gray-500">{new Date(followUp.follow_up_date).toLocaleDateString()}</span>
-                                        <Badge className={`${getPriorityBadgeColor(followUp.priority)} text-xs`}>{followUp.priority}</Badge>
-                                        <Badge className={followUp.status === 'completed' ? 'bg-green-900 text-green-400' : 'bg-yellow-900 text-yellow-400'}>{followUp.status}</Badge>
-                                      </div>
-                                    </div>
-                                    <div className="flex items-center gap-1">
-                                      {followUp.status !== 'completed' && <Button size="sm" variant="ghost" onClick={() => handleMarkDone(followUp.id)} className="text-green-400"><Check className="size-4" /></Button>}
-                                      <Button size="sm" variant="ghost" onClick={() => handleEditFollowUp(followUp)} className="text-gray-400"><Edit className="size-3" /></Button>
-                                      <Button size="sm" variant="ghost" onClick={() => handleDeleteFollowUp(followUp.id)} className="text-red-400"><Trash2 className="size-3" /></Button>
-                                    </div>
+
+                        <div className="col-span-1 text-xs">
+                          {getStatusBadge(client.status)}
+                        </div>
+
+                        <div className="col-span-1 text-xs text-gray-300">
+                          <p className="text-gray-600 text-[10px]">Reg.</p>
+                          <p>{new Date(client.registrationDate).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}</p>
+                        </div>
+
+                        <div className="col-span-2 text-xs">
+                          <p className="text-gray-300">{client.totalBookings} bookings</p>
+                          <p className="text-orange-400 text-[10px]">Rs.{(client.totalSpent || 0).toLocaleString()}</p>
+                        </div>
+
+                        <div className="col-span-3 flex justify-end gap-0.5">
+                          <Button size="sm" variant="ghost" onClick={() => handleAddFollowUp(client)} className="text-blue-400 hover:bg-blue-500/10 h-6 w-6 p-0" title="Follow-up"><Clock className="size-3" /></Button>
+                          <Button size="sm" variant="ghost" onClick={() => setExpandedClientId(expandedClientId === client.id ? null : client.id)} className="text-gray-400 hover:bg-gray-500/10 h-6 w-6 p-0" title="Expand"><ChevronDown className="size-3" /></Button>
+                          <Button size="sm" variant="ghost" onClick={() => handlePrintClient(client)} className="text-yellow-400 hover:bg-yellow-500/10 h-6 w-6 p-0" title="Print"><Printer className="size-3" /></Button>
+                          <Button size="sm" variant="ghost" onClick={() => handleEditClient(client)} className="text-gray-400 hover:bg-gray-500/10 h-6 w-6 p-0" title="Edit"><Edit className="size-3" /></Button>
+                          <Button size="sm" variant="ghost" onClick={() => toggleClientStatus(client.id)} className={`hover:bg-gray-500/10 h-6 w-6 p-0 ${client.status === 'active' ? 'text-red-400' : 'text-green-400'}`} title={client.status === 'active' ? 'Deactivate' : 'Activate'}>{client.status === 'active' ? <EyeOff className="size-3" /> : <Eye className="size-3" />}</Button>
+                          <Button size="sm" variant="ghost" onClick={() => handleDeleteClient(client.id)} className="text-red-400 hover:bg-red-500/10 h-6 w-6 p-0" title="Delete"><Trash2 className="size-3" /></Button>
+                        </div>
+                      </div>
+                    </Card>
+                  </motion.div>
+
+                  {/* Expanded Follow-ups Row */}
+                  {expandedClientId === client.id && (
+                    <motion.div
+                      initial={{ opacity: 0, height: 0 }}
+                      animate={{ opacity: 1, height: 'auto' }}
+                      exit={{ opacity: 0, height: 0 }}
+                      transition={{ duration: 0.3 }}
+                      className="mt-2 bg-gray-900/50 border border-gray-800/50 rounded-lg p-4"
+                    >
+                      <div className="space-y-3">
+                        <h4 className="text-sm font-medium text-gray-300">Follow-ups</h4>
+                        {getClientFollowUps(client.id).length === 0 ? (
+                          <p className="text-sm text-gray-500">No follow-ups for this client</p>
+                        ) : (
+                          <div className="space-y-2 max-h-64 overflow-y-auto">
+                            {getClientFollowUps(client.id).map((followUp) => (
+                              <div key={followUp.id} className="flex items-start justify-between bg-gray-800/50 p-3 rounded border border-gray-700 text-sm">
+                                <div className="flex-1 min-w-0">
+                                  <p className="text-gray-300">{followUp.note}</p>
+                                  <div className="flex items-center gap-2 mt-1 flex-wrap">
+                                    <span className="text-xs text-gray-500">{new Date(followUp.follow_up_date).toLocaleDateString()}</span>
+                                    <Badge className={`${getPriorityBadgeColor(followUp.priority)} text-xs`}>{followUp.priority}</Badge>
+                                    <Badge className={followUp.status === 'completed' ? 'bg-green-900 text-green-400' : 'bg-yellow-900 text-yellow-400'}>{followUp.status}</Badge>
                                   </div>
-                                ))}
+                                </div>
+                                <div className="flex items-center gap-1 flex-shrink-0 ml-2">
+                                  {followUp.status !== 'completed' && <Button size="sm" variant="ghost" onClick={() => handleMarkDone(followUp.id)} className="text-green-400 hover:bg-green-500/10 h-7 w-7 p-0"><Check className="size-3.5" /></Button>}
+                                  <Button size="sm" variant="ghost" onClick={() => handleEditFollowUp(followUp)} className="text-gray-400 hover:bg-gray-500/10 h-7 w-7 p-0"><Edit className="size-3.5" /></Button>
+                                  <Button size="sm" variant="ghost" onClick={() => handleDeleteFollowUp(followUp.id)} className="text-red-400 hover:bg-red-500/10 h-7 w-7 p-0"><Trash2 className="size-3.5" /></Button>
+                                </div>
                               </div>
-                            )}
+                            ))}
                           </div>
-                        </td>
-                      </motion.tr>
-                    ] : [])
-                  ])}
-                </tbody>
-              </table>
-            </div>
-          </Card>
-
-          {/* Client Drawer */}
-          <AnimatePresence>
-            {showClientDrawer && (
-              <motion.div
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                exit={{ opacity: 0 }}
-                className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4"
-                onClick={() => setShowClientDrawer(false)}
-              >
-                <motion.div
-                  initial={{ scale: 0.9, opacity: 0 }}
-                  animate={{ scale: 1, opacity: 1 }}
-                  exit={{ scale: 0.9, opacity: 0 }}
-                  onClick={(e) => e.stopPropagation()}
-                  className="bg-gray-900 border-2 border-gray-700 rounded-lg p-6 w-full max-w-md"
-                >
-                  <div className="flex items-center justify-between mb-6">
-                    <h2 className="text-xl font-serif text-yellow-500 uppercase">
-                      {isEditing ? 'Edit Client' : 'Add New Client'}
-                    </h2>
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      onClick={() => setShowClientDrawer(false)}
-                      className="text-gray-400 hover:text-white"
-                    >
-                      <X className="size-4" />
-                    </Button>
-                  </div>
-
-                  <div className="space-y-4">
-                    <div>
-                      <Label htmlFor="firstName" className="text-gray-300">First Name *</Label>
-                      <Input
-                        id="firstName"
-                        value={clientForm.firstName}
-                        onChange={(e) => setClientForm({...clientForm, firstName: e.target.value})}
-                        className="bg-gray-800 border-gray-700 text-white mt-1"
-                      />
-                    </div>
-                    <div>
-                      <Label htmlFor="lastName" className="text-gray-300">Last Name *</Label>
-                      <Input
-                        id="lastName"
-                        value={clientForm.lastName}
-                        onChange={(e) => setClientForm({...clientForm, lastName: e.target.value})}
-                        className="bg-gray-800 border-gray-700 text-white mt-1"
-                      />
-                    </div>
-                    <div>
-                      <Label htmlFor="email" className="text-gray-300">Email *</Label>
-                      <Input
-                        id="email"
-                        type="email"
-                        value={clientForm.email}
-                        onChange={(e) => setClientForm({...clientForm, email: e.target.value})}
-                        className="bg-gray-800 border-gray-700 text-white mt-1"
-                      />
-                    </div>
-                    <div>
-                      <Label htmlFor="phone" className="text-gray-300">Phone</Label>
-                      <Input
-                        id="phone"
-                        value={clientForm.phone}
-                        onChange={(e) => setClientForm({...clientForm, phone: e.target.value})}
-                        className="bg-gray-800 border-gray-700 text-white mt-1"
-                      />
-                    </div>
-                    <div>
-                      <Label htmlFor="status" className="text-gray-300">Status</Label>
-                      <Select value={clientForm.status} onValueChange={(value) => setClientForm({...clientForm, status: value})}>
-                        <SelectTrigger className="bg-gray-800 border-gray-700 text-white mt-1">
-                          <SelectValue />
-                        </SelectTrigger>
-                        <SelectContent className="bg-gray-800 border-gray-700">
-                          <SelectItem value="active">Active</SelectItem>
-                          <SelectItem value="inactive">Inactive</SelectItem>
-                          <SelectItem value="pending">Pending</SelectItem>
-                        </SelectContent>
-                      </Select>
-                    </div>
-                  </div>
-
-                  <div className="flex gap-3 mt-6">
-                    <Button
-                      onClick={handleSaveClient}
-                      className="flex-1 bg-red-700 hover:bg-red-800"
-                    >
-                      {isEditing ? 'Update Client' : 'Add Client'}
-                    </Button>
-                    <Button
-                      variant="outline"
-                      onClick={() => setShowClientDrawer(false)}
-                      className="flex-1 border-gray-700 text-gray-300 hover:bg-gray-800"
-                    >
-                      Cancel
-                    </Button>
-                  </div>
-                </motion.div>
-              </motion.div>
+                        )}
+                      </div>
+                    </motion.div>
+                  )}
+                </div>
+              ))
             )}
-          </AnimatePresence>
-
-          {/* Follow-up Modal */}
-          <AnimatePresence>
-            {showFollowUpModal && (
+          </div>
+        </div>
+        )}
+        <AnimatePresence>
+          {showFollowUpModal && (
               <motion.div
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
@@ -1159,7 +1454,6 @@ export default function AdminClients() {
             )}
           </AnimatePresence>
         </div>
-      </div>
-    </>
+      </>
   );
 }
